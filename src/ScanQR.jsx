@@ -1,17 +1,16 @@
-"use client";
 import React, { useEffect, useState } from "react";
 import { Html5QrcodeScanner } from "html5-qrcode";
-import fetchData from "./api";
 
 const Page = () => {
   const [scannedText, setScannedText] = useState("");
+  const [apiData, setApiData] = useState(null);
 
   useEffect(() => {
     function onScanSuccess(decodedText, decodedResult) {
       setScannedText(decodedText);
       fetchData(decodedText)
         .then(data => {
-          console.log(data); // Print the fetched data
+          setApiData(data); // Set the fetched data
         })
         .catch(error => {
           console.error("Error fetching data:", error);
@@ -40,22 +39,27 @@ const Page = () => {
     };
   }, []);
 
-  // Function to fetch data using the scanned QR code
   const fetchData = async (qrCode) => {
     try {
-      // Perform the fetch operation using the qrCode
-      const response = await fetch(`https://example.com/api?qrcode=${qrCode}`);
+      const response = await fetch(`http://203.170.129.88:9078/api/QRCode/${qrCode}/10`);
       const data = await response.json();
-      console.log(data); // Do something with the fetched data
+      return data;
     } catch (error) {
       console.error("Error fetching data:", error);
     }
   };
+  
 
   return (
     <div className="w-full h-svh flex flex-col items-center justify-self-center">
       <div id="reader" className="w-[600px]"></div>
       {scannedText && <p>Scanned Text: {scannedText}</p>}
+      {apiData && (
+        <div>
+          <h2>API Data:</h2>
+          <pre>{JSON.stringify(apiData, null, 2)}</pre>
+        </div>
+      )}
     </div>
   );
 };
