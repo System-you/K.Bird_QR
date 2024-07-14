@@ -8,6 +8,7 @@ const Page = () => {
   useEffect(() => {
     function onScanSuccess(decodedText, decodedResult) {
       setScannedText(decodedText);
+      fetchData(decodedText); // Call the fetchData function with the scanned QR code
     }
 
     function onScanFailure(error) {
@@ -32,6 +33,18 @@ const Page = () => {
       htmlScanner.clear();
     };
   }, []);
+
+  // Function to fetch data using the scanned QR code
+  const fetchData = async (qrCode) => {
+    try {
+      // Perform the fetch operation using the qrCode
+      const response = await fetch(`https://example.com/api?qrcode=${qrCode}`);
+      const data = await response.json();
+      console.log(data); // Do something with the fetched data
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  };
 
   return (
     <div className="w-full h-svh flex flex-col items-center justify-self-center">
