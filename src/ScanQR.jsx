@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { Html5QrcodeScanner } from "html5-qrcode";
+import fetchData from "./api";
 
 const Page = () => {
   const [scannedText, setScannedText] = useState("");
@@ -8,9 +9,14 @@ const Page = () => {
   useEffect(() => {
     function onScanSuccess(decodedText, decodedResult) {
       setScannedText(decodedText);
-      fetchData(decodedText); // Call the fetchData function with the scanned QR code
+      fetchData(decodedText)
+        .then(data => {
+          console.log(data); // Print the fetched data
+        })
+        .catch(error => {
+          console.error("Error fetching data:", error);
+        });
     }
-
     function onScanFailure(error) {
       console.warn(`Code scan error = ${error}`);
     }
