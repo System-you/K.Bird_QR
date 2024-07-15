@@ -18,6 +18,7 @@ const ScanQR = () => {
           width: 250,
           height: 250,
         },
+        disableFlip: true, // Disable the "Scan paused" text
       },
       false
     );
