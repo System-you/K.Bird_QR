@@ -6,37 +6,6 @@ const ApiComponent = ({ qrCode, closeModal, updateQrStatus, status }) => {
   const [error, setError] = useState(null);
   const [selectedStatus, setSelectedStatus] = useState(status || "");
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch(
-          `https://api.allorigins.win/raw?url=http://203.170.129.88:9078/api/QRCode/${qrCode}/10`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              Accept: "application/json",
-            },
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-
-        const jsonData = await response.json();
-        console.log("Fetched data:", jsonData);
-        setData(jsonData.Data); // Access the "Data" property
-      } catch (error) {
-        
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [qrCode]);
-  console.log(data);
   const handleStatusChange = (e) => {
     setSelectedStatus(e.target.value);
   };

@@ -1,12 +1,11 @@
 import './App.css';
-import Page from './ScanQR';
-import ApiComponent from './api';
+import ScanQR from './ScanQR';
 import React from 'react';
 
 function App() {
   return (
     <>
-      <Page />
+      <ScanQR />
     </>
   );
 }
