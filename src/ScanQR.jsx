@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { Html5QrcodeScanner } from "html5-qrcode";
+import { toast } from 'react-hot-toast';
 
 const Page = () => {
   const [scannedText, setScannedText] = useState("");
   const [apiData, setApiData] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     function onScanSuccess(decodedText, decodedResult) {
@@ -11,9 +13,12 @@ const Page = () => {
       fetchData(decodedText)
         .then(data => {
           setApiData(data); // Set the fetched data
+          setLoading(false);
         })
         .catch(error => {
           console.error("Error fetching data:", error);
+          toast.error(`Error fetching data: ${error.message}`);
+          setLoading(false);
         });
     }
     function onScanFailure(error) {
@@ -40,20 +45,26 @@ const Page = () => {
   }, []);
 
   const fetchData = async (qrCode) => {
+    setLoading(true);
     try {
       const response = await fetch(`http://203.170.129.88:9078/api/QRCode/${qrCode}/10`);
+      if (!response.ok) {
+        throw new Error("API request failed");
+      }
       const data = await response.json();
       return data;
     } catch (error) {
       console.error("Error fetching data:", error);
+      toast.error(`Error fetching data: ${error.message}`);
+      setLoading(false);
     }
   };
-  
 
   return (
     <div className="w-full h-svh flex flex-col items-center justify-self-center">
       <div id="reader" className="w-[600px]"></div>
       {scannedText && <p>Scanned Text: {scannedText}</p>}
+      {loading && <p>Loading...</p>}
       {apiData && (
         <div>
           <h2>API Data:</h2>
