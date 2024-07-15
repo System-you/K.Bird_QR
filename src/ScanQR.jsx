@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Html5QrcodeScanner } from "html5-qrcode";
 
-const Page = () => {
-  const [scannedData, setScannedData] = useState("");
+const Page = ({ scannedData }) => {
   const [isScanning, setIsScanning] = useState(true);
   const [showPopup, setShowPopup] = useState(false);
   const [scanner, setScanner] = useState(null);
@@ -21,7 +20,6 @@ const Page = () => {
     );
 
     function onScanSuccess(decodedText, decodedResult) {
-      setScannedData(decodedText);
       setIsScanning(false);
       setShowPopup(true);
       htmlScanner.pause(true); // Pause the scanner
@@ -55,6 +53,7 @@ const Page = () => {
           <div className="popup-overlay" onClick={closePopup}></div>
           <div className="popup">
             <p>Scanned Data: {scannedData}</p>
+            <p>API Data: {JSON.stringify(scannedData)}</p> {/* Display API data */}
             <button className="close-btn" onClick={closePopup}>Close</button>
           </div>
         </>
