@@ -54,7 +54,7 @@ const ScanQR = () => {
   return (
     <div>
       <div id="reader" className="w-[600px]"></div>
-      {scannedData && (
+      {showModal && scannedData && (
         <Modal isOpen={showModal} onRequestClose={closeModal}>
           <ApiComponent
             qrCode={scannedData}
