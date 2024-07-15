@@ -65,6 +65,7 @@ const ScanQR = () => {
           />
         </Modal>
       )}
+      {htmlScanner.resume()}
     </div>
   );
 };

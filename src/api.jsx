@@ -36,11 +36,11 @@ const ApiComponent = ({ qrCode, closeModal, updateQrStatus, status }) => {
 
     fetchData();
   }, [qrCode]);
-
+  console.log(data);
   const handleStatusChange = (e) => {
     setSelectedStatus(e.target.value);
   };
-
+  
   const handleConfirm = () => {
     updateQrStatus(qrCode, selectedStatus);
     closeModal();
