@@ -71,8 +71,8 @@ const ApiComponent = ({ qrCode, closeModal, updateQrStatus, status }) => {
                             <option value="">Select Status</option>
                             <option value="A-สำเร็จ">A-สำเร็จ</option>
                             <option value="B-เสีย">B-เสีย</option>
-                            <option value="C-รับชิ้นงานแล้ว">B-รับชิ้นงานแล้ว</option>
-                            <option value="D-ส่งแล้ว">B-ส่งแล้ว</option>
+                            <option value="C-รับชิ้นงานแล้ว">C-รับชิ้นงานแล้ว</option>
+                            <option value="D-ส่งแล้ว">D-ส่งแล้ว</option>
                         </select>
                     </label>
                     <div className="modal-buttons">
