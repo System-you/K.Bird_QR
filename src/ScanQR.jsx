@@ -30,7 +30,7 @@ const ScanQR = () => {
     };
 
     const onScanFailure = (error) => {
-      console.error("Scan failed:", error);
+      
     };
 
     htmlScanner.render(onScanSuccess, onScanFailure);
