@@ -1,30 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { Html5QrcodeScanner } from "html5-qrcode";
-import { toast } from 'react-hot-toast';
 
 const Page = () => {
-  const [scannedText, setScannedText] = useState("");
-  const [apiData, setApiData] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [scannedData, setScannedData] = useState("");
+  const [isScanning, setIsScanning] = useState(true);
+  const [showPopup, setShowPopup] = useState(false);
+  const [scanner, setScanner] = useState(null);
 
   useEffect(() => {
-    function onScanSuccess(decodedText, decodedResult) {
-      setScannedText(decodedText);
-      fetchData(decodedText)
-        .then(data => {
-          setApiData(data); // Set the fetched data
-          setLoading(false);
-        })
-        .catch(error => {
-          console.error("Error fetching data:", error);
-          toast.error(`Error fetching data: ${error.message}`);
-          setLoading(false);
-        });
-    }
-    function onScanFailure(error) {
-      console.warn(`Code scan error = ${error}`);
-    }
-
     const htmlScanner = new Html5QrcodeScanner(
       "reader",
       {
@@ -34,43 +17,49 @@ const Page = () => {
           height: 250,
         },
       },
-      true
+      false // disable initial scanning
     );
 
+    function onScanSuccess(decodedText, decodedResult) {
+      setScannedData(decodedText);
+      setIsScanning(false);
+      setShowPopup(true);
+      htmlScanner.pause(true); // Pause the scanner
+    }
+
+    function onScanFailure(error) {
+      console.error("Scan failed:", error);
+    }
+
     htmlScanner.render(onScanSuccess, onScanFailure);
+    setScanner(htmlScanner);
 
     return () => {
       htmlScanner.clear();
     };
   }, []);
 
-  const fetchData = async (qrCode) => {
-    setLoading(true);
-    try {
-      const response = await fetch(`http://203.170.129.88:9078/api/QRCode/${qrCode}/10`);
-      if (!response.ok) {
-        throw new Error("API request failed");
-      }
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      console.error("Error fetching data:", error);
-      toast.error(`Error fetching data: ${error.message}`);
-      setLoading(false);
+  const closePopup = () => {
+    setShowPopup(false);
+    setIsScanning(true);
+    if (scanner) {
+      scanner.resume(); // Resume scanning
     }
   };
 
   return (
     <div className="w-full h-svh flex flex-col items-center justify-self-center">
       <div id="reader" className="w-[600px]"></div>
-      {scannedText && <p>Scanned Text: {scannedText}</p>}
-      {loading && <p>Loading...</p>}
-      {apiData && (
-        <div>
-          <h2>API Data:</h2>
-          <pre>{JSON.stringify(apiData, null, 2)}</pre>
-        </div>
+      {showPopup && (
+        <>
+          <div className="popup-overlay" onClick={closePopup}></div>
+          <div className="popup">
+            <p>Scanned Data: {scannedData}</p>
+            <button className="close-btn" onClick={closePopup}>Close</button>
+          </div>
+        </>
       )}
+      {!isScanning && <p>Scan Complete</p>}
     </div>
   );
 };
