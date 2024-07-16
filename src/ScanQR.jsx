@@ -10,6 +10,8 @@ const ScanQR = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [selectedStatus, setSelectedStatus] = useState("");
+  const [username, setUsername] = useState("");
+  const [station, setStation] = useState("");
 
   useEffect(() => {
     const htmlScanner = new Html5QrcodeScanner(
@@ -28,14 +30,11 @@ const ScanQR = () => {
     const onScanSuccess = (decodedText, decodedResult) => {
       setScannedData(decodedText);
       setShowModal(true);
-      // if (htmlScanner) {
-      //   htmlScanner.pause(true); // Pause the scanner
-      // }
       fetchData(decodedText); // Fetch data when scan is successful
     };
 
     const onScanFailure = (error) => {
-      console.error(`Scan failed: ${error}`);
+      return
     };
 
     htmlScanner.render(onScanSuccess, onScanFailure);
@@ -84,11 +83,18 @@ const ScanQR = () => {
     setFetchedData(null);
     setSelectedStatus("");
     setError(null);
-    // window.location.reload();
   };
 
   const handleStatusChange = (e) => {
     setSelectedStatus(e.target.value);
+  };
+
+  const handleUsernameChange = (e) => {
+    setUsername(e.target.value);
+  };
+
+  const handleStationChange = (e) => {
+    setStation(e.target.value);
   };
 
   const handleConfirm = () => {
@@ -97,11 +103,64 @@ const ScanQR = () => {
     }
     console.log(`Status confirmed: ${selectedStatus}`);
     closeModal();
-    // window.location.reload(); // Refresh the page
+    handlePatchData(); // Call the function to send PATCH request
+
+    console.log("Data being patched:", {
+      part_model: fetchedData["Part Model"],
+      station: parseInt(station),
+      part_id: fetchedData["Part Id"],
+      emp_name: username,
+      status: fetchData["สถานะ"],
+    });
+  };
+
+  const handlePatchData = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(
+        `https://api.allorigins.win/raw?url=http://203.170.129.88:9078/api/QRCode`,
+        {
+          method: "PATCH",
+          headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+          },
+          body: JSON.stringify({
+        part_model: fetchedData["Part Model"],
+        station: station,
+        part_id: fetchedData["Part Id"],
+        emp_name: username,
+        status: selectedStatus,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      const jsonData = await response.json();
+      console.log("PATCH Data Response:", jsonData);
+      // Optionally update state or perform additional actions upon successful PATCH
+    } catch (error) {
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div>
+      <div>
+        <label>
+          Username:
+          <input type="text" value={username} onChange={handleUsernameChange} />
+        </label>
+        <label>
+          Station:
+          <input type="text" value={station} onChange={handleStationChange} />
+        </label>
+      </div>
       <div id="reader" className="w-[600px]"></div>
       {showModal && (
         <Modal isOpen={showModal} onRequestClose={closeModal} ariaHideApp={false}>
@@ -126,10 +185,10 @@ const ScanQR = () => {
                     Status:
                     <select value={selectedStatus} onChange={handleStatusChange}>
                       <option value="">Select Status</option>
-                      <option value="A-สำเร็จ">A-สำเร็จ</option>
-                      <option value="B-เสีย">B-เสีย</option>
-                      <option value="C-รับชิ้นงานแล้ว">C-รับชิ้นงานแล้ว</option>
-                      <option value="D-ส่งแล้ว">D-ส่งแล้ว</option>
+                      <option value="A">A-สำเร็จ</option>
+                      <option value="B">B-เสีย</option>
+                      <option value="C">C-รับชิ้นงานแล้ว</option>
+                      <option value="D">D-ส่งแล้ว</option>
                     </select>
                   </label>
                   <div className="modal-buttons">
