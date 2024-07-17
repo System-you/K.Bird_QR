@@ -97,50 +97,63 @@ const ScanQR = () => {
     setStation(e.target.value);
   };
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     if (scannedData) {
       localStorage.setItem(scannedData, selectedStatus);
     }
     console.log(`Status confirmed: ${selectedStatus}`);
     closeModal();
-    handlePatchData(); // Call the function to send PATCH request
+    await handlePostData(); // Call the function to send POST request
 
-    console.log("Data being patched:", {
-      part_model: fetchedData["Part Model"],
-      station: parseInt(station),
-      part_id: fetchedData["Part Id"],
-      emp_name: username,
-      status: fetchData["สถานะ"],
-    });
   };
 
-  const handlePatchData = async () => {
+  const handlePostData = async () => {
     setLoading(true);
     try {
-      const response = await fetch(
-        `https://api.allorigins.win/raw?url=http://203.170.129.88:9078/api/QRCode`,
-        {
-          method: "PATCH",
-          headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-          },
-          body: JSON.stringify({
-        part_model: fetchedData["Part Model"],
-        station: station,
-        part_id: fetchedData["Part Id"],
-        emp_name: username,
-        status: selectedStatus,
-          }),
-        }
-      );
+      const raw = JSON.stringify({
+        "part_model": "HL-04005PW-B",
+        "station": 10,
+        "part_id": 324,
+        "emp_name": "JOW",
+        "status": "C"
+      });
+      const myHeaders = new Headers();
+        myHeaders.append("Content-Type", "application/json");
+      const requestOptions = {
+        method: "POST",
+        headers: myHeaders,
+        body: raw,
+        redirect: "follow"
+      };
+      
+      fetch("https://api.allorigins.win/raw?url=http://203.170.129.88:9078/api/QRCode", requestOptions)
+        .then((response) => response.text())
+        .then((result) => console.log(result))
+        .catch((error) => console.error(error));
+      // const response = await fetch(
+      //   `https://api.allorigins.win/raw?url=http://203.170.129.88:9078/api/QRCode`,
+      //   {
+      //     method: "POST",
+      //     headers: {
+      //       "Content-Type": "application/json",
+      //     },
+      //     body: JSON.stringify({
+      //       part_model: "HL-04005PW-B",
+      //       station: 10,
+      //       part_id: 324,
+      //       emp_name: "jow",
+      //       status: "D",
+      //     }),
+          
+      //   }
+      // );
+      // console.log("POST Data Response:", response.json);
+      // if (!response.ok) {
+      //   throw new Error(`HTTP error! Status: ${response.status}`);
+      // }
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-
-      const jsonData = await response.json();
-      console.log("PATCH Data Response:", jsonData);
+      // const jsonData = await response.json();
+      // console.log("PATCH Data Response:", jsonData);
       // Optionally update state or perform additional actions upon successful PATCH
     } catch (error) {
       setError(error.message);
@@ -181,10 +194,10 @@ const ScanQR = () => {
                   <p>ความกว้าง: {fetchedData["ความกว้าง"]}</p>
                   <p>ความยาว: {fetchedData["ความยาว"]}</p>
                   <p>ชื่อวัสดุ: {fetchedData["ชื่อวัสดุ"]}</p>
+                  <p>สถานะ: {fetchedData["สถานะ"]}</p>
                   <label>
-                    Status:
                     <select value={selectedStatus} onChange={handleStatusChange}>
-                      <option value="">Select Status</option>
+                      <option value="">Select status</option>
                       <option value="A">A-สำเร็จ</option>
                       <option value="B">B-เสีย</option>
                       <option value="C">C-รับชิ้นงานแล้ว</option>
