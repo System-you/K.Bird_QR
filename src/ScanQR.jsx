@@ -57,15 +57,16 @@ const ScanQR = () => {
           },
         }
       );
-
+  
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
-
-      const jsonData = await response.json();
+  
+      const htmlResponse = await response.text();
+      const jsonData = JSON.parse(htmlResponse);
       console.log("Fetched data:", jsonData);
       setFetchedData(jsonData.Data); // Access the "Data" property
-
+  
       const storedStatus = localStorage.getItem(qrCode);
       if (storedStatus) {
         setSelectedStatus(storedStatus);
@@ -76,6 +77,7 @@ const ScanQR = () => {
       setLoading(false);
     }
   };
+  
 
   const closeModal = () => {
     setShowModal(false);
