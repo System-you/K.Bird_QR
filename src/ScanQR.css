@@ -1,71 +1,46 @@
-/* Overall container styling */
-.container {
-  padding: 100px;
-  max-width: 600px;
-  margin: auto;
-  background-color: white; /* Overall background color to white */
-}
-
-/* Form container styling */
-.form-container {
-  margin-bottom: 20px;
-}
-
-/* Form label styling */
-.form-label {
-  display: block;
-  margin-bottom: 10px;
-  font-size: 16px; /* Adjust font size for better readability */
-  color: black;
-}
-
-/* Form input styling */
-.form-input {
-  width: 100%;
-  padding: 10px; /* Adjust padding for appropriate size */
-  font-size: 16px; /* Adjust font size for better readability */
-  color: black;
-  background-color: white;
-  border: 1px solid #ccc; /* Add a border */
-  border-radius: 4px; /* Add border radius */
-  margin-bottom: 20px; /* Add margin for spacing */
-}
-
-/* Button styling */
-.toggle-camera-button {
-  width: 100%;
-  padding: 10px; /* Adjust padding for appropriate size */
-  font-size: 16px; /* Adjust font size for better readability */
-  cursor: pointer;
-  background-color: white; /* Background color to white */
-  color: black; /* Font color to black */
-  border: 1px solid #ccc; /* Add a border */
-  border-radius: 4px; /* Add border radius */
-  margin-bottom: 20px; /* Add some space below the button */
-}
-
-/* Button hover effect */
-.toggle-camera-button:hover {
-  background-color: #f0f0f0; /* Slightly darker background on hover */
-}
-
-/* Reader styling */
-.reader {
-  width: 100%;
-}
-
-/* Modal styling */
+/* Existing styles */
 .api-modal {
   padding: 20px;
   background-color: white;
   color: black;
-  border-radius : 10px;
+  border-radius: 10px;
 }
 
+.modal-buttons {
+  display: flex;
+  margin-top: 20px;
+  gap: 50px; /* Add space between buttons */
+}
 
-  /* Modal buttons styling */
-  .modal-buttons {
-    display: flex;
-    margin-top: 20px;
-    gap: 50px; /* Add space between buttons */
+/* Mobile-specific styles */
+@media (max-width: 768px) {
+  .api-modal {
+    padding: 10px; /* Reduce padding for smaller screens */
+    border-radius: 5px; /* Optional: Adjust border-radius for a softer look */
   }
+
+  .modal-buttons {
+    flex-direction: column; /* Stack buttons vertically on small screens */
+    gap: 20px; /* Reduce gap for smaller screens */
+  }
+
+  .form-container {
+    display: flex;
+    flex-direction: column; /* Stack form elements vertically */
+    gap: 10px; /* Adjust gap between form elements */
+  }
+
+  .form-label {
+    font-size: 14px; /* Adjust font size for readability */
+  }
+
+  .form-input, .toggle-camera-button {
+    font-size: 14px; /* Adjust font size for better usability */
+    padding: 10px; /* Adjust padding for a better touch target */
+  }
+
+  #reader {
+    width: 100%; /* Ensure QR reader uses full width */
+    height: auto; /* Adjust height automatically */
+  }
+}
