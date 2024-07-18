@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Html5QrcodeScanner } from "html5-qrcode";
 import Modal from "react-modal";
 import toast, { Toaster } from "react-hot-toast";
@@ -13,79 +13,91 @@ const ScanQR = () => {
   const [selectedStatus, setSelectedStatus] = useState("");
   const [username, setUsername] = useState("");
   const [station, setStation] = useState("");
+  const [isCameraActive, setIsCameraActive] = useState(false);
+
+  const debounce = (func, wait) => {
+    let timeout;
+    return (...args) => {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => func(...args), wait);
+    };
+  };
+
+  const fetchData = useCallback(
+    debounce(async (qrCode, station) => {
+      setLoading(true);
+      try {
+        const timestamp = new Date().getTime();
+        const response = await fetch(
+          `https://api.allorigins.win/raw?url=http://203.170.129.88:9078/api/QRCode/${qrCode}/${station}?t=${timestamp}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        const htmlResponse = await response.text();
+        const jsonData = JSON.parse(htmlResponse);
+        console.log("Fetched data:", jsonData);
+        setFetchedData(jsonData.Data); // Access the "Data" property
+
+        const storedStatus = localStorage.getItem(qrCode);
+        if (storedStatus) {
+          setSelectedStatus(storedStatus);
+        } else {
+          setSelectedStatus(jsonData.Data["สถานะ"]);
+        }
+      } catch (error) {
+        setError(error.message);
+      } finally {
+        setLoading(false);
+      }
+    }, 1000), [] // Adjust the debounce delay as needed
+  );
 
   useEffect(() => {
-    const htmlScanner = new Html5QrcodeScanner(
-      "reader",
-      {
-        fps: 10,
-        qrbox: {
-          width: 250,
-          height: 250,
-        },
-        disableFlip: true, // Disable the "Scan paused" text
-      },
-      false
-    );
-
-    const onScanSuccess = (decodedText, decodedResult) => {
-      if (!username || !station) {
-        toast.error("Please input the username and station before scanning the QR code.");
-        return;
-      }
-      setScannedData(decodedText);
-      setShowModal(true);
-      fetchData(decodedText, station); // Fetch data when scan is successful
-    };
-
-    const onScanFailure = (error) => {
-      return;
-    };
-
-    htmlScanner.render(onScanSuccess, onScanFailure);
-
-    return () => {
-      htmlScanner.clear();
-    };
-  }, [username, station]);
-
-  const fetchData = async (qrCode, station) => {
-    setLoading(true);
-    try {
-      const response = await fetch(
-        `https://api.allorigins.win/raw?url=http://203.170.129.88:9078/api/QRCode/${qrCode}/${station}`,
+    if (isCameraActive) {
+      const htmlScanner = new Html5QrcodeScanner(
+        "reader",
         {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-            "Cache-Control": "no-cache",
-
+          fps: 10,
+          qrbox: {
+            width: 250,
+            height: 250,
           },
-        }
+          disableFlip: true, // Disable the "Scan paused" text
+        },
+        false
       );
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
+      const onScanSuccess = (decodedText, decodedResult) => {
+        if (!username || !station) {
+          toast.error("Please input the username and station before scanning the QR code.");
+          return;
+        }
+        setScannedData(decodedText);
+        setShowModal(true);
+        fetchData(decodedText, station); // Fetch data when scan is successful
+      };
 
-      const htmlResponse = await response.text();
-      const jsonData = JSON.parse(htmlResponse);
-      console.log("Fetched data:", jsonData);
-      setFetchedData(jsonData.Data); // Access the "Data" property
+      const onScanFailure = (error) => {
+        return;
+      };
 
-      const storedStatus = localStorage.getItem(qrCode);
-      if (storedStatus) {
-        setSelectedStatus(storedStatus);
-      } else {
-        setSelectedStatus(jsonData.Data["สถานะ"]);
-      }
-    } catch (error) {
-      setError(error.message);
-    } finally {
-      setLoading(false);
+      htmlScanner.render(onScanSuccess, onScanFailure);
+
+      return () => {
+        htmlScanner.clear();
+      };
     }
-  };
+  }, [fetchData, isCameraActive, username, station]);
 
   const closeModal = () => {
     setShowModal(false);
@@ -137,7 +149,7 @@ const ScanQR = () => {
       console.log("Updating with Employee Name:", emp_name);
       console.log("Updating with Part Status:", part_status);
 
-      const url = `https://api.allorigins.win/raw?url=http://203.170.129.88:9078/api/QRCode_update/${part_model}/${part_id}/${part_station}/${emp_name}/${part_status}`;
+      const url = `http://203.170.129.88:9078/api/QRCode_update/${part_model}/${part_id}/${part_station}/${emp_name}/${part_status}`;
 
       const response = await fetch(url, {
         method: "GET",
@@ -161,19 +173,30 @@ const ScanQR = () => {
     }
   };
 
+  const toggleCamera = () => {
+    if (username && station) {
+      setIsCameraActive(!isCameraActive);
+    } else {
+      toast.error("Please input the username and station before activating the camera.");
+    }
+  };
+
   return (
     <div>
       <div>
         <label>
           Username:
-          <input type="text" value={username} onChange={handleUsernameChange} />
+          <input type="text" value={username} onChange={handleUsernameChange} disabled={isCameraActive} />
         </label>
         <label>
           Station:
-          <input type="text" value={station} onChange={handleStationChange} />
+          <input type="text" value={station} onChange={handleStationChange} disabled={isCameraActive} />
         </label>
+        <button onClick={toggleCamera}>
+          {isCameraActive ? "Hide Camera" : "Show Camera"}
+        </button>
       </div>
-      <div id="reader" className="w-[600px]"></div>
+      {isCameraActive && <div id="reader" className="w-[600px]"></div>}
       {showModal && (
         <Modal isOpen={showModal} onRequestClose={closeModal} ariaHideApp={false}>
           <div className="api-modal">
