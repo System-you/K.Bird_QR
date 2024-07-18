@@ -199,7 +199,7 @@ const ScanQR = () => {
             value={username}
             onChange={handleUsernameChange}
             disabled={isCameraActive}
-            style={{ width: '100%', padding: '10px', fontSize: '16px' }}
+            style={{ width: '100%', padding: '10px', fontSize: '16px', color: 'black' }}
           />
         </label>
       </div>
@@ -211,13 +211,13 @@ const ScanQR = () => {
             value={station}
             onChange={handleStationChange}
             disabled={isCameraActive}
-            style={{ width: '100%', padding: '10px', fontSize: '16px' }}
+            style={{ width: '100%', padding: '10px', fontSize: '16px', color: 'black' }}
           />
         </label>
       </div>
       <button
         onClick={toggleCamera}
-        style={{ width: '100%', padding: '10px', fontSize: '18px', cursor: 'pointer' }}
+        style={{ width: '100%', padding: '10px', fontSize: '18px', cursor: 'pointer', color: 'black' }}
       >
         {isCameraActive ? "Hide Camera" : "Show Camera"}
       </button>
@@ -232,15 +232,15 @@ const ScanQR = () => {
             ) : (
               fetchedData && (
                 <div>
-                  <p>Part ID: {fetchedData["Part Id"]}</p>
-                  <p>Part Model: {fetchedData["Part Model"]}</p>
-                  <p>ชื่อเฟอร์นิเจอร์: {fetchedData["ชื่อเฟอร์นิเจอร์"]}</p>
-                  <p>ตำแหน่งชิ้นงาน: {fetchedData["ตำแหน่งชิ้นงาน"]}</p>
-                  <p>ความหนา: {fetchedData["ความหนา"]}</p>
-                  <p>ความกว้าง: {fetchedData["ความกว้าง"]}</p>
-                  <p>ความยาว: {fetchedData["ความยาว"]}</p>
-                  <p>ชื่อวัสดุ: {fetchedData["ชื่อวัสดุ"]}</p>
-                  <p>สถานะ: {fetchedData["สถานะ"]}</p>
+                  <p style={{ color: 'black' }}>Part ID: {fetchedData["Part Id"]}</p>
+                  <p style={{ color: 'black' }}>Part Model: {fetchedData["Part Model"]}</p>
+                  <p style={{ color: 'black' }}>ชื่อเฟอร์นิเจอร์: {fetchedData["ชื่อเฟอร์นิเจอร์"]}</p>
+                  <p style={{ color: 'black' }}>ตำแหน่งชิ้นงาน: {fetchedData["ตำแหน่งชิ้นงาน"]}</p>
+                  <p style={{ color: 'black' }}>ความหนา: {fetchedData["ความหนา"]}</p>
+                  <p style={{ color: 'black' }}>ความกว้าง: {fetchedData["ความกว้าง"]}</p>
+                  <p style={{ color: 'black' }}>ความยาว: {fetchedData["ความยาว"]}</p>
+                  <p style={{ color: 'black' }}>ชื่อวัสดุ: {fetchedData["ชื่อวัสดุ"]}</p>
+                  <p style={{ color: 'black' }}>สถานะ: {fetchedData["สถานะ"]}</p>
                   <label>
                     <select value={selectedStatus} onChange={handleStatusChange}>
                       <option value="">Select status</option>
