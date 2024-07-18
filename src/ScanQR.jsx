@@ -55,7 +55,9 @@ const ScanQR = () => {
           setSelectedStatus(jsonData.Data["สถานะ"]);
         }
       } catch (error) {
-        setError(error.message);
+        toast.error(`Please scan the QR code again`);
+        closeModal();
+        // setError(error.message);
       } finally {
         setLoading(false);
       }
@@ -124,14 +126,19 @@ const ScanQR = () => {
       localStorage.setItem(scannedData, selectedStatus);
     }
     console.log(`Status confirmed: ${selectedStatus}`);
-    await handlePostData(); // Call the function to send POST request
+    try {
+      await handlePostData(); // Call the function to send POST request
 
-    // Introduce a small delay before fetching the updated data
-    setTimeout(async () => {
-      await fetchData(scannedData, station); // Refresh the fetched data after update
-    }, 1000);
+      // Introduce a small delay before fetching the updated data
+      setTimeout(async () => {
+        await fetchData(scannedData, station); // Refresh the fetched data after update
+      }, 1000);
 
-    closeModal();
+      closeModal();
+    } catch (error) {
+      toast.error("Error updating QR Code. Please try again.");
+      console.error("Error updating QR Code:", error.message);
+    }
   };
 
   const handlePostData = async () => {
@@ -148,8 +155,8 @@ const ScanQR = () => {
       console.log("Updating with Part Station:", part_station);
       console.log("Updating with Employee Name:", emp_name);
       console.log("Updating with Part Status:", part_status);
-
-      const url = `https://api.allorigins.win/raw?url=http://203.170.129.88:9078/api/QRCode_update/${part_model}/${part_id}/${part_station}/${emp_name}/${part_status}`;
+      const timestamp = new Date().getTime();
+      const url = `https://api.allorigins.win/raw?url=http://203.170.129.88:9078/api/QRCode_update/${part_model}/${part_id}/${part_station}/${emp_name}/${part_status}?t=${timestamp}`;
 
       const response = await fetch(url, {
         method: "GET",
@@ -164,11 +171,12 @@ const ScanQR = () => {
       }
 
       const result = await response.json();
+      toast.success("QR Code updated successfully");
       console.log("Update Result:", result);
 
     } catch (error) {
+      toast.error("Error updating QR Code plese try again");
       console.error("Error updating QR Code:", error.message);
-    } finally {
       setLoading(false);
     }
   };
