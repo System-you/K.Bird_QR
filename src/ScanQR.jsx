@@ -135,7 +135,7 @@ const ScanQR = () => {
       console.log("Updating with Employee Name:", emp_name);
       console.log("Updating with Part Status:", part_status);
 
-      const url = `http://203.170.129.88:9078/api/QRCode_update/${part_model}/${part_id}/${part_station}/${emp_name}/${part_status}`;
+      const url = `https://api.allorigins.win/raw?url=http://203.170.129.88:9078/api/QRCode_update/${part_model}/${part_id}/${part_station}/${emp_name}/${part_status}`;
 
       const response = await fetch(url, {
         method: "GET",
