@@ -12,14 +12,7 @@ export default defineConfig({
           console.log(`Rewriting path: ${path}`);
           return path.replace(/^\/api/, '');
         },
-        // configure: (proxy, options) => {
-        //   proxy.on('proxyReq', (proxyReq, req, res) => {
-        //     console.log(`Proxying request to: ${req.url}`);
-        //   });
-        //   proxy.on('proxyRes', (proxyRes, req, res) => {
-        //     console.log(`Received response for: ${req.url}`);
-        //   });
-        // },
+       
       },
     },
   },

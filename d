@@ -1,1 +1,1 @@
-https://qr-demo-back-end.bear-house-auth.workers.dev
+https://api.allorigins.win/raw?url=http://203.170.129.88:9078/api/QRCode/HL-04005PW-B-324/10

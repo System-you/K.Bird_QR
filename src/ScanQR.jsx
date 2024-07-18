@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Html5QrcodeScanner } from "html5-qrcode";
 import Modal from "react-modal";
+import toast, { Toaster } from "react-hot-toast";
 import "./ScanQR.css"; // Ensure you have the CSS for styling
 
 const ScanQR = () => {
@@ -28,13 +29,17 @@ const ScanQR = () => {
     );
 
     const onScanSuccess = (decodedText, decodedResult) => {
+      if (!username || !station) {
+        toast.error("Please input the username and station before scanning the QR code.");
+        return;
+      }
       setScannedData(decodedText);
       setShowModal(true);
-      fetchData(decodedText); // Fetch data when scan is successful
+      fetchData(decodedText, station); // Fetch data when scan is successful
     };
 
     const onScanFailure = (error) => {
-      return
+      return;
     };
 
     htmlScanner.render(onScanSuccess, onScanFailure);
@@ -42,13 +47,13 @@ const ScanQR = () => {
     return () => {
       htmlScanner.clear();
     };
-  }, []);
+  }, [username, station]);
 
-  const fetchData = async (qrCode) => {
+  const fetchData = async (qrCode, station) => {
     setLoading(true);
     try {
       const response = await fetch(
-        `https://api.allorigins.win/raw?url=http://203.170.129.88:9078/api/QRCode/${qrCode}/10`,
+        `https://api.allorigins.win/raw?url=http://203.170.129.88:9078/api/QRCode/${qrCode}/${station}`,
         {
           method: "GET",
           headers: {
@@ -57,19 +62,21 @@ const ScanQR = () => {
           },
         }
       );
-  
+
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
-  
+
       const htmlResponse = await response.text();
       const jsonData = JSON.parse(htmlResponse);
       console.log("Fetched data:", jsonData);
       setFetchedData(jsonData.Data); // Access the "Data" property
-  
+
       const storedStatus = localStorage.getItem(qrCode);
       if (storedStatus) {
         setSelectedStatus(storedStatus);
+      } else {
+        setSelectedStatus(jsonData.Data["สถานะ"]);
       }
     } catch (error) {
       setError(error.message);
@@ -77,7 +84,6 @@ const ScanQR = () => {
       setLoading(false);
     }
   };
-  
 
   const closeModal = () => {
     setShowModal(false);
@@ -104,61 +110,50 @@ const ScanQR = () => {
       localStorage.setItem(scannedData, selectedStatus);
     }
     console.log(`Status confirmed: ${selectedStatus}`);
-    closeModal();
     await handlePostData(); // Call the function to send POST request
 
+    // Introduce a small delay before fetching the updated data
+    setTimeout(async () => {
+      await fetchData(scannedData, station); // Refresh the fetched data after update
+    }, 1000);
+
+    closeModal();
   };
 
   const handlePostData = async () => {
     setLoading(true);
     try {
-      const raw = JSON.stringify({
-        "part_model": "HL-04005PW-B",
-        "station": 10,
-        "part_id": 324,
-        "emp_name": "JOW",
-        "status": "C"
-      });
-      const myHeaders = new Headers();
-        myHeaders.append("Content-Type", "application/json");
-      const requestOptions = {
-        method: "POST",
-        headers: myHeaders,
-        body: raw,
-        redirect: "follow"
-      };
-      
-      fetch("https://api.allorigins.win/raw?url=http://203.170.129.88:9078/api/QRCode", requestOptions)
-        .then((response) => response.text())
-        .then((result) => console.log(result))
-        .catch((error) => console.error(error));
-      // const response = await fetch(
-      //   `https://api.allorigins.win/raw?url=http://203.170.129.88:9078/api/QRCode`,
-      //   {
-      //     method: "POST",
-      //     headers: {
-      //       "Content-Type": "application/json",
-      //     },
-      //     body: JSON.stringify({
-      //       part_model: "HL-04005PW-B",
-      //       station: 10,
-      //       part_id: 324,
-      //       emp_name: "jow",
-      //       status: "D",
-      //     }),
-          
-      //   }
-      // );
-      // console.log("POST Data Response:", response.json);
-      // if (!response.ok) {
-      //   throw new Error(`HTTP error! Status: ${response.status}`);
-      // }
+      const part_model = fetchedData["Part Model"];
+      const part_id = parseInt(fetchedData["Part Id"]);
+      const part_station = parseInt(station);
+      const emp_name = username;
+      const part_status = selectedStatus;
 
-      // const jsonData = await response.json();
-      // console.log("PATCH Data Response:", jsonData);
-      // Optionally update state or perform additional actions upon successful PATCH
+      console.log("Updating with Part Model:", part_model);
+      console.log("Updating with Part ID:", part_id);
+      console.log("Updating with Part Station:", part_station);
+      console.log("Updating with Employee Name:", emp_name);
+      console.log("Updating with Part Status:", part_status);
+
+      const url = `http://203.170.129.88:9078/api/QRCode_update/${part_model}/${part_id}/${part_station}/${emp_name}/${part_status}`;
+
+      const response = await fetch(url, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log("Update Result:", result);
+
     } catch (error) {
-      setError(error.message);
+      console.error("Error updating QR Code:", error.message);
     } finally {
       setLoading(false);
     }
@@ -187,7 +182,6 @@ const ScanQR = () => {
             ) : (
               fetchedData && (
                 <div>
-                  <p>QR Code: {scannedData}</p>
                   <p>Part ID: {fetchedData["Part Id"]}</p>
                   <p>Part Model: {fetchedData["Part Model"]}</p>
                   <p>ชื่อเฟอร์นิเจอร์: {fetchedData["ชื่อเฟอร์นิเจอร์"]}</p>
@@ -216,6 +210,7 @@ const ScanQR = () => {
           </div>
         </Modal>
       )}
+      <Toaster position="top-right" reverseOrder={false} />
     </div>
   );
 };
