@@ -59,6 +59,8 @@ const ScanQR = () => {
           headers: {
             "Content-Type": "application/json",
             Accept: "application/json",
+            "Cache-Control": "no-cache",
+
           },
         }
       );
@@ -91,6 +93,7 @@ const ScanQR = () => {
     setFetchedData(null);
     setSelectedStatus("");
     setError(null);
+    window.location.reload(true); // Reload the page to reset the scanner
   };
 
   const handleStatusChange = (e) => {
