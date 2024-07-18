@@ -57,7 +57,6 @@ const ScanQR = () => {
       } catch (error) {
         toast.error(`Please scan the QR code again`);
         closeModal();
-        // setError(error.message);
       } finally {
         setLoading(false);
       }
@@ -190,42 +189,67 @@ const ScanQR = () => {
   };
 
   return (
-    <div style={{ padding: '10px', maxWidth: '600px', margin: 'auto', backgroundColor: 'white', color: 'black' }}>
-      <div style={{ marginBottom: '20px' }}>
-        <label style={{ display: 'block', marginBottom: '5px', color: 'black' }}>
+    <div className="container">
+      <div className="form-container">
+        <label className="form-label">
           Username:
           <input
             type="text"
             value={username}
             onChange={handleUsernameChange}
             disabled={isCameraActive}
-            style={{ width: '100%', padding: '10px', fontSize: '16px', color: 'black', backgroundColor: 'white' }}
+            className="form-input"
           />
         </label>
-      </div>
-      <div style={{ marginBottom: '20px' }}>
-        <label style={{ display: 'block', marginBottom: '5px', color: 'black' }}>
+        <label className="form-label">
           Station:
           <input
             type="text"
             value={station}
             onChange={handleStationChange}
             disabled={isCameraActive}
-            style={{ width: '100%', padding: '10px', fontSize: '16px', color: 'black', backgroundColor: 'white' }}
+            className="form-input"
           />
         </label>
+        <button onClick={toggleCamera} className="toggle-camera-button">
+          {isCameraActive ? "Hide Camera" : "Show Camera"}
+        </button>
       </div>
-      <button
-        onClick={toggleCamera}
-        style={{ width: '100%',allignment: 'center', padding: '10px', fontSize: '18px', cursor: 'pointer', color: 'black', backgroundColor: 'white',border: '1px solid black' }}
-      >
-        {isCameraActive ? "Hide Camera" : "Show Camera"}
-      </button>
-      {isCameraActive && <div id="reader" className="w-[600px]" style={{ backgroundColor: 'white' }}></div>}
+      {isCameraActive && <div id="reader" className="reader"></div>}
       {showModal && (
-        <Modal isOpen={showModal} onRequestClose={closeModal} ariaHideApp={false} style={{ overlay: { backgroundColor: 'white' }, content: { color: 'black' } }}>
-          <div className="api-modal" style={{ backgroundColor: 'white', color: 'black' }}>
-            {/* Modal content with updated styles */}
+        <Modal isOpen={showModal} onRequestClose={closeModal} ariaHideApp={false}>
+          <div className="api-modal">
+            {loading ? (
+              <p>Loading data...</p>
+            ) : error ? (
+              <p>Error: {error}</p>
+            ) : (
+              fetchedData && (
+                <div>
+                  <p>Part ID: {fetchedData["Part Id"]}</p>
+                  <p>Part Model: {fetchedData["Part Model"]}</p>
+                  <p>ชื่อเฟอร์นิเจอร์: {fetchedData["ชื่อเฟอร์นิเจอร์"]}</p>
+                  <p>ตำแหน่งชิ้นงาน: {fetchedData["ตำแหน่งชิ้นงาน"]}</p>
+                  <p>ความหนา: {fetchedData["ความหนา"]}</p>
+                  <p>ความกว้าง: {fetchedData["ความกว้าง"]}</p>
+                  <p>ความยาว: {fetchedData["ความยาว"]}</p>
+                  <p>ชื่อวัสดุ: {fetchedData["ชื่อวัสดุ"]}</p>
+                  <p>สถานะ: {fetchedData["สถานะ"]}</p>
+                  <label>
+                    <select value={selectedStatus} onChange={handleStatusChange}>
+                      <option value="A">A-สำเร็จ</option>
+                      <option value="B">B-เสีย</option>
+                      <option value="C">C-รับชิ้นงานแล้ว</option>
+                      <option value="D">D-ส่งแล้ว</option>
+                    </select>
+                  </label>
+                  <div className="modal-buttons">
+                    <button onClick={handleConfirm}>OK</button>
+                    <button onClick={closeModal}>Cancel</button>
+                  </div>
+                </div>
+              )
+            )}
           </div>
         </Modal>
       )}
