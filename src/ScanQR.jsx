@@ -243,7 +243,6 @@ const ScanQR = () => {
                   <p style={{ color: 'black' }}>สถานะ: {fetchedData["สถานะ"]}</p>
                   <label>
                     <select value={selectedStatus} onChange={handleStatusChange}>
-                      <option value="">Select status</option>
                       <option value="A">A-สำเร็จ</option>
                       <option value="B">B-เสีย</option>
                       <option value="C">C-รับชิ้นงานแล้ว</option>
