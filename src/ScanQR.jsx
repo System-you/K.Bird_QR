@@ -93,7 +93,6 @@ const ScanQR = () => {
     setFetchedData(null);
     setSelectedStatus("");
     setError(null);
-    window.location.reload(true); // Reload the page to reset the scanner
   };
 
   const handleStatusChange = (e) => {
