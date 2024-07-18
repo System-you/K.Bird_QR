@@ -42,3 +42,8 @@
     background-color: #f44336; /* Red */
     color: white;
   }
+
+  body, .api-modal, #reader, input, select, button {
+    background-color: white; /* Set background to white */
+    color: black; /* Set text color to black */
+  }
