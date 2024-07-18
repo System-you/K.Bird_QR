@@ -190,20 +190,37 @@ const ScanQR = () => {
   };
 
   return (
-    <div>
-      <div>
-        <label>
+    <div style={{ padding: '10px', maxWidth: '600px', margin: 'auto' }}>
+      <div style={{ marginBottom: '20px' }}>
+        <label style={{ display: 'block', marginBottom: '5px' }}>
           Username:
-          <input type="text" value={username} onChange={handleUsernameChange} disabled={isCameraActive} />
+          <input
+            type="text"
+            value={username}
+            onChange={handleUsernameChange}
+            disabled={isCameraActive}
+            style={{ width: '100%', padding: '10px', fontSize: '16px' }}
+          />
         </label>
-        <label>
-          Station:
-          <input type="text" value={station} onChange={handleStationChange} disabled={isCameraActive} />
-        </label>
-        <button onClick={toggleCamera}>
-          {isCameraActive ? "Hide Camera" : "Show Camera"}
-        </button>
       </div>
+      <div style={{ marginBottom: '20px' }}>
+        <label style={{ display: 'block', marginBottom: '5px' }}>
+          Station:
+          <input
+            type="text"
+            value={station}
+            onChange={handleStationChange}
+            disabled={isCameraActive}
+            style={{ width: '100%', padding: '10px', fontSize: '16px' }}
+          />
+        </label>
+      </div>
+      <button
+        onClick={toggleCamera}
+        style={{ width: '100%', padding: '10px', fontSize: '18px', cursor: 'pointer' }}
+      >
+        {isCameraActive ? "Hide Camera" : "Show Camera"}
+      </button>
       {isCameraActive && <div id="reader" className="w-[600px]"></div>}
       {showModal && (
         <Modal isOpen={showModal} onRequestClose={closeModal} ariaHideApp={false}>
