@@ -28,23 +28,31 @@ const ScanQR = () => {
       setLoading(true);
       try {
         const timestamp = new Date().getTime();
-        const response = await fetch(
-          `https://api.allorigins.win/raw?url=http://203.170.129.88:9078/api/QRCode/${qrCode}/${station}?t=${timestamp}`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              Accept: "application/json",
-            },
-          }
-        );
+        const url = `https://thingproxy.freeboard.io/fetch/=http://203.170.129.88:9078/api/QRCode/${qrCode}/${station}?t=${timestamp}`;
+        console.log("URL:", url);
+        const response = await fetch(url, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+        });
+        console.log("Response:", response);
 
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
 
-        const htmlResponse = await response.text();
-        const jsonData = JSON.parse(htmlResponse);
+        const responseText = await response.text();
+        console.log("Response text:", responseText);
+
+        let jsonData;
+        try {
+          jsonData = JSON.parse(responseText);
+        } catch (error) {
+          throw new Error("Failed to parse JSON response");
+        }
+
         console.log("Fetched data:", jsonData);
         setFetchedData(jsonData.Data); // Access the "Data" property
 
@@ -55,6 +63,8 @@ const ScanQR = () => {
           setSelectedStatus(jsonData.Data["สถานะ"]);
         }
       } catch (error) {
+        console.error("Error fetching data:", error);
+        setError(error.message);
         toast.error(`Please scan the QR code again`);
         closeModal();
       } finally {
@@ -90,6 +100,7 @@ const ScanQR = () => {
 
       const onScanFailure = (error) => {
         return;
+        
       };
 
       htmlScanner.render(onScanSuccess, onScanFailure);
