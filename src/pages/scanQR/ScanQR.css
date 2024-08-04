@@ -13,7 +13,7 @@
 }
 
 /* Mobile-specific styles */
-@media (max-width: 768px) {
+@media (max-width: 375px) {
   .api-modal {
     padding: 10px; /* Reduce padding for smaller screens */
     border-radius: 5px; /* Optional: Adjust border-radius for a softer look */
