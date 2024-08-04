@@ -8,13 +8,7 @@
   from = "/*"
   to = "/index.html"
   status = 200
-
-  ## Uncomment to use this redirect for Single Page Applications like create-react-app.
-  ## Not needed for static site generators.
-  #[[redirects]]
-  #  from = "/*"
-  #  to = "/index.html"
-  #  status = 200
+  force = true  # ensures that even if there's a file like /404.html, it will still do the redirect
 
   ## (optional) Settings for Netlify Dev
   ## https://github.com/netlify/cli/blob/main/docs/netlify-dev.md#project-detection
