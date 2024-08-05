@@ -1,5 +1,6 @@
 import toast from "react-hot-toast";
 
+const apiKey = import.meta.env.VITE_REACT_APP_API_KEY;
 export const debounce = (func, wait) => {
   let timeout;
   return (...args) => {
@@ -11,7 +12,7 @@ export const debounce = (func, wait) => {
 export const fetchData = debounce(async (qrCode, station, setLoading, setFetchedData, setError, closeModal) => {
   setLoading(true);
   try {
-    const apiKey = import.meta.env.VITE_REACT_APP_API_KEY;
+    
 
     if (!apiKey) {
       throw new Error("API key is missing");
@@ -54,8 +55,8 @@ export const fetchData = debounce(async (qrCode, station, setLoading, setFetched
 export const handlePostData = async (fetchedData, station, username, selectedStatus, setLoading) => {
   setLoading(true);
   try {
-    const part_model = fetchedData["Part Model"];
-    const part_id = parseInt(fetchedData["Part Id"]);
+    const part_model = fetchedData["partmodel"];
+    const part_id = parseInt(fetchedData["partId"]);
     const part_station = parseInt(station);
     const emp_name = username;
     const part_status = selectedStatus;
@@ -66,13 +67,14 @@ export const handlePostData = async (fetchedData, station, username, selectedSta
     console.log("Updating with Employee Name:", emp_name);
     console.log("Updating with Part Status:", part_status);
     const timestamp = new Date().getTime();
-    const url = `http://203.170.129.88:9078/api/QRCode_update/${part_model}/${part_id}/${part_station}/${emp_name}/${part_status}?t=${timestamp}`;
+    const url = `https://api-qr-demo.appsystemyou.com/qr-code?partmodel=${part_model}&partId=${part_id}&station=${part_station}&empName=${emp_name}&status=${part_status}&t=${timestamp}`;
 
     const response = await fetch(url, {
-      method: "GET",
+      method: "PATCH",
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
+        "x-api-key": apiKey, // Add API key from .env
       },
     });
 
