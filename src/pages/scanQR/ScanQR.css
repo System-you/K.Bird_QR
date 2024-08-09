@@ -7,6 +7,7 @@
 }
 
 .modal-buttons {
+  color: white ;
   display: flex;
   margin-top: 20px;
   gap: 50px; /* Add space between buttons */
@@ -20,6 +21,7 @@
   }
 
   .modal-buttons {
+    color: white ; 
     flex-direction: column; /* Stack buttons vertically on small screens */
     gap: 20px; /* Reduce gap for smaller screens */
   }
@@ -34,9 +36,25 @@
     font-size: 14px; /* Adjust font size for readability */
   }
 
-  .form-input, .toggle-camera-button {
+  .form-input{
     font-size: 14px; /* Adjust font size for better usability */
     padding: 10px; /* Adjust padding for a better touch target */
+    color: black;
+  }
+  
+  #html5-qrcode-button-camera-permission, #html5-qrcode-button-camera-stop
+  , #html5-qrcode-button-camera-start, #html5-qrcode-button-scan-qr {
+    font-size: 14px; /* Adjust font size for better usability */
+    padding: 8px; /* Adjust padding for a better touch target */
+    color: white;
+    background-color: black;
+  }
+  
+  .toggle-camera-button {
+    font-size: 14px; /* Adjust font size for better usability */
+    padding: 10px; /* Adjust padding for a better touch target */
+    color: white;
+    background-color: black;
   }
 
   #reader {

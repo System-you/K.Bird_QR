@@ -38,7 +38,9 @@ const Login = () => {
         const result = await response.json(); // Parse the response JSON
         toast.success("Login Complete.");
         console.log("User Data:", result.data);
-
+        
+        localStorage.setItem("username", username);
+        localStorage.setItem("password", password);
         // Store the required fields in local storage
         localStorage.setItem("Emp_Id", result.data.Emp_Id);
         localStorage.setItem("Emp_Code", result.data.Emp_Code);

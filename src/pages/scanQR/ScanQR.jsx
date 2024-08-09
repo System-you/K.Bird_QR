@@ -19,12 +19,15 @@ const ScanQR = () => {
   const [isCameraActive, setIsCameraActive] = useState(false);
 
   useEffect(() => {
+    console.log("Username:", username);
+    console.log("Station:", station);
+  
     if (!username || !station) {
       toast.error("Username and station are required. Please log in again.");
       navigate("/login");
     }
   }, [username, station, navigate]);
-
+  
   const fetchDataCallback = useCallback(
     async (qrCode, station) => {
       try {
@@ -47,6 +50,7 @@ const ScanQR = () => {
           qrbox: {
             width: 250,
             height: 250,
+
           },
           disableFlip: true, // Disable the "Scan paused" text
         },
@@ -85,11 +89,11 @@ const ScanQR = () => {
   };
 
   const handleConfirm = async () => {
-    if (scannedData) {
+    if (scannedData&&fetchedData["total_scans"]<fetchedData["inventory"]) {
       console.log(`Status confirmed: ${selectedStatus}`);
       try {
         await handlePostData(fetchedData, station, username, selectedStatus, setLoading); // Call the function to send POST request
-        // console.log("Data posted successfully");
+        toast.success("อัพโหลดเรียบร้อย",{duration: 5000});
         
         // Introduce a small delay before fetching the updated data
         setTimeout(async () => {
@@ -101,12 +105,15 @@ const ScanQR = () => {
         total = total + 1;
         const inventory = Number(fetchedData["inventory"]);
 
-        toast.success("อัพโหลดไปแล้ว "+total+'/'+inventory,{duration: 5000});
+        // toast.success("อัพโหลดไปแล้ว "+total+'/'+inventory,{duration: 5000});
         
       } catch (error) {
         toast.error("Error updating QR Code. Please try again.");
         console.error("Error updating QR Code:", error.message);
       }
+    }
+    else if(fetchedData["total_scans"]>=fetchedData["inventory"]){
+      toast.error("ไม่สามารถแสกนได้ เนื่องจากได้แสกนไปแล้วทั้งหมด");
     }
   };
 
