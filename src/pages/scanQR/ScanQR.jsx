@@ -89,14 +89,20 @@ const ScanQR = () => {
       console.log(`Status confirmed: ${selectedStatus}`);
       try {
         await handlePostData(fetchedData, station, username, selectedStatus, setLoading); // Call the function to send POST request
-        console.log("Data posted successfully");
-
+        // console.log("Data posted successfully");
+        
         // Introduce a small delay before fetching the updated data
         setTimeout(async () => {
           await fetchDataCallback(scannedData, station); // Refresh the fetched data after update
         }, 1000);
 
         closeModal();
+        let total = Number(fetchedData["total_scans"]);
+        total = total + 1;
+        const inventory = Number(fetchedData["inventory"]);
+
+        toast.success("อัพโหลดไปแล้ว "+total+'/'+inventory,{duration: 5000});
+        
       } catch (error) {
         toast.error("Error updating QR Code. Please try again.");
         console.error("Error updating QR Code:", error.message);
@@ -149,6 +155,8 @@ const ScanQR = () => {
                   <p>ความยาว: {fetchedData["part_length"]}</p>
                   <p>ชื่อวัสดุ: {fetchedData["part_matname"]}</p>
                   <p>สถานะ: {fetchedData["sts_name"]}</p> {/* Show fetched status */}
+                  <p>Inventory ทั้งหมด : {fetchedData["inventory"]}</p>
+                  <p>แสกนไปแล้ว : {fetchedData["total_scans"]}</p>
                   <p>New Status: {selectedStatus}</p> {/* Show selected status */}
                   <div className="modal-buttons">
                     <button onClick={handleConfirm}>OK</button>

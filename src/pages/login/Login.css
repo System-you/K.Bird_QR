@@ -1,18 +1,20 @@
-/* Login.css */
+
+
 .login-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 100vh;
+  height: 100vh; /* Updated property */
   background-color: #f0f0f0;
   padding: 20px;
   box-sizing: border-box;
+  width: 100%; /* Added property */
 }
 
 h2 {
   margin-bottom: 20px;
-  font-size: 24px;
+  font-size: 20px; /* Adjusted for mobile */
   color: #333;
   text-align: center;
 }
@@ -22,7 +24,7 @@ h2 {
   flex-direction: column;
   align-items: center;
   background-color: white;
-  padding: 20px;
+  padding: 15px; /* Adjusted for mobile */
   border-radius: 10px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   width: 100%;
@@ -33,53 +35,33 @@ h2 {
 .form-label {
   margin-bottom: 10px;
   width: 100%;
-  font-size: 16px;
+  font-size: 14px; /* Adjusted for mobile */
   color: #333;
 }
 
 .form-input {
-  padding: 12px; /* Slightly reduced padding for mobile */
+  padding: 10px; /* Adjusted for mobile */
   margin-bottom: 20px;
   border: 1px solid #ccc;
   border-radius: 5px;
   width: 100%;
-  font-size: 16px;
+  font-size: 14px; /* Adjusted for mobile */
   box-sizing: border-box;
 }
 
 .login-button {
-  padding: 12px; /* Adjusted padding for mobile */
+  padding: 10px; /* Adjusted for mobile */
   border: none;
   border-radius: 5px;
   background-color: #007bff;
   color: white;
   cursor: pointer;
   width: 100%;
-  font-size: 16px;
+  font-size: 14px; /* Adjusted for mobile */
   box-sizing: border-box;
 }
 
 .login-button:disabled {
   background-color: #ccc;
   cursor: not-allowed;
-}
-
-/* Mobile-specific styles */
-@media (max-width: 375px) {
-  .form-container {
-    padding: 15px;
-  }
-
-  .form-label {
-    font-size: 14px;
-  }
-
-  .form-input, .login-button {
-    font-size: 14px;
-    padding: 10px;
-  }
-
-  h2 {
-    font-size: 20px;
-  }
 }

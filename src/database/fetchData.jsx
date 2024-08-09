@@ -83,7 +83,7 @@ export const handlePostData = async (fetchedData, station, username, selectedSta
     }
 
     const result = await response.json();
-    toast.success("QR Code updated successfully");
+    // toast.success("QR Code updated successfully");
     console.log("Update Result:", result);
 
   } catch (error) {

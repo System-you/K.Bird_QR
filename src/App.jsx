@@ -2,6 +2,7 @@ import React from "react";
 import { BrowserRouter as Router, Route, Routes, Navigate } from "react-router-dom";
 import Login from "./pages/login/Login.jsx";
 import ScanQR from "./pages/scanQR/ScanQR.jsx";
+import "./App.css";
 
 const App = () => {
   return (
