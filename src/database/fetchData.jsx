@@ -1,37 +1,33 @@
 import toast from "react-hot-toast";
-const API_URL =  "https://3459-2403-6200-8882-21fa-3d94-36af-f490-9625.ngrok-free.app"
+import { debounce } from 'lodash';
+
+
+const API_URL = "http://localhost:8787";
 const apiKey = import.meta.env.VITE_REACT_APP_API_KEY;
-export const debounce = (func, wait) => {
-  let timeout;
-  return (...args) => {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => func(...args), wait);
-  };
-};
+
 
 export const fetchData = debounce(async (qrCode, station, setLoading, setFetchedData, setError, closeModal) => {
   setLoading(true);
   try {
-    
-
     if (!apiKey) {
       throw new Error("API key is missing");
     }
     if (!qrCode || !station) {
       throw new Error("Please fill in all fields");
     }
+
     const timestamp = new Date().getTime();
     const url = `${API_URL}/qr-code?station=${station}&qrCode=${qrCode}&t=${timestamp}`;
     console.log("URL:", url);
+    
     const response = await fetch(url, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
-        "x-api-key": apiKey, // Add API key from .env
+        "x-api-key": apiKey,
       },
     });
-    console.log("Response:", response);
 
     if (!response.ok) {
       throw new Error(`HTTP error! Status: ${response.status}`);
@@ -40,7 +36,7 @@ export const fetchData = debounce(async (qrCode, station, setLoading, setFetched
     const responseData = await response.json();
     console.log("Response data:", responseData);
 
-    setFetchedData(responseData.data); // Access the "data" property
+    setFetchedData(responseData.data);
 
   } catch (error) {
     console.error("Error fetching data:", error);
@@ -50,31 +46,20 @@ export const fetchData = debounce(async (qrCode, station, setLoading, setFetched
   } finally {
     setLoading(false);
   }
-}, 1000); // Adjust the debounce delay as needed
+}, 1000);
 
 export const handlePostData = async (fetchedData, station, username, selectedStatus, setLoading) => {
-  setLoading(true);
   try {
-    const part_model = fetchedData["partmodel"];
-    const part_id = parseInt(fetchedData["partId"]);
-    const part_station = parseInt(station);
-    const emp_name = username;
-    const part_status = selectedStatus;
-
-    console.log("Updating with Part Model:", part_model);
-    console.log("Updating with Part ID:", part_id);
-    console.log("Updating with Part Station:", part_station);
-    console.log("Updating with Employee Name:", emp_name);
-    console.log("Updating with Part Status:", part_status);
-    const timestamp = new Date().getTime();
-    const url = `${API_URL}/qr-code?partmodel=${part_model}&partId=${part_id}&station=${part_station}&empName=${emp_name}&status=${part_status}&t=${timestamp}`;
+    setLoading(true);
+    const url = `${API_URL}/qr-code?partmodel=${fetchedData.partmodel}&partId=${fetchedData.partId}&station=${station}&empName=${username}&status=${selectedStatus}`;
+    console.log("POST URL:", url);
 
     const response = await fetch(url, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
-        "x-api-key": apiKey, // Add API key from .env
+        "x-api-key": apiKey,
       },
     });
 
@@ -83,12 +68,85 @@ export const handlePostData = async (fetchedData, station, username, selectedSta
     }
 
     const result = await response.json();
-    // toast.success("QR Code updated successfully");
-    console.log("Update Result:", result);
+    console.log("POST Result:", result);
+    toast.success(result.message || "อัพโหลดเรียบร้อย");
 
   } catch (error) {
-    toast.error("Error updating QR Code. Please try again.");
-    console.error("Error updating QR Code:", error.message);
+    console.error("Error in handlePostData:", error.message);
+    throw error;
+  } finally {
+    setLoading(false);
+  }
+};
+
+export const fetchPartModel = async (setLoading, setFetchedData, setError) => {
+  const url = `${API_URL}/part-model`;
+  try {
+    setLoading(true);
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        "x-api-key": apiKey,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log("Full API Response:", data);
+
+    if (Array.isArray(data) && data.length > 0) {
+      const sortedData = data.sort((a, b) => a.part_model.localeCompare(b.part_model));
+      localStorage.setItem('partModelData', JSON.stringify(sortedData));
+      setFetchedData(sortedData);
+    } else if (data && Array.isArray(data.data) && data.data.length > 0) {
+      const sortedData = data.data.sort((a, b) => a.part_model.localeCompare(b.part_model));
+      localStorage.setItem('partModelData', JSON.stringify(sortedData));
+      setFetchedData(sortedData);
+    } else {
+      throw new Error("Data format is incorrect. Expected an array.");
+    }
+  } catch (error) {
+    console.error("Error fetching part model:", error);
+    setError(error.message);
+    toast.error("Failed to fetch part model data");
+  } finally {
+    setLoading(false);
+  }
+};
+
+
+export const fetchPartModelMaterials = async (partModel, station, setLoading, setMaterialsData, setError) => {
+  const timestamp = new Date().getTime();
+  const url = `${API_URL}/part-model/materials?partmodel=${partModel}&station=${station}&t=${timestamp}`;
+  try {
+    setLoading(true);
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        "x-api-key": apiKey,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log("Fetched Materials Data:", data);
+
+    setMaterialsData(data.data || []);
+
+  } catch (error) {
+    console.error("Error fetching part model materials:", error);
+    setError(error.message);
+    toast.error("Failed to fetch part model materials");
   } finally {
     setLoading(false);
   }

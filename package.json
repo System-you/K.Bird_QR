@@ -17,6 +17,7 @@
     "express": "^4.19.2",
     "html5-qrcode": "^2.3.8",
     "http-proxy-middleware": "^3.0.0",
+    "lodash": "^4.17.21",
     "netlify-cli": "^17.33.5",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
@@ -28,6 +29,7 @@
   "devDependencies": {
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.1",
     "@vitejs/plugin-react-swc": "^3.5.0",
     "eslint": "^8.57.0",
     "eslint-plugin-react": "^7.34.2",

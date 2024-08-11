@@ -2,13 +2,14 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
 import "./Login.css"; // Ensure you import the CSS file
-import useUserStore from '../../config/store'; // Adjust the import path
 
 const Login = () => {
   const [loading, setLoading] = useState(false);
+  const [username, setUsername] = useState(""); // Initialize username state
+  const [password, setPassword] = useState(""); // Initialize password state
+  const [station, setStation] = useState(""); // Initialize station state
+  const [userData, setUserData] = useState(null); // Initialize userData state
   const navigate = useNavigate(); // Initialize useNavigate hook
-
-  const { username, password, station, setUsername, setPassword, setStation, setUserData } = useUserStore();
 
   const handleLogin = async () => {
     setLoading(true);
@@ -23,32 +24,49 @@ const Login = () => {
       if (!username || !password || !station) {
         throw new Error("Please fill in all fields");
       }
+      
+      const url = `http://localhost:8787/auth/login/${username}/${password}`;
+      
+      let response;
+      try {
+        response = await fetch(url, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+            "x-api-key": apiKey, // Add API key from .env
+          },
+        });
+      
+        // Check if the response is JSON
+        const contentType = response.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+          throw new Error("Received non-JSON response");
+        }
+      
+        const data = await response.json();
+        console.log("Login successful:", data);
 
-      const url = `https://3459-2403-6200-8882-21fa-3d94-36af-f490-9625.ngrok-free.app/auth/login/${username}/${password}`;
+        if (response.status === 200) {
+          toast.success("Login Complete.");
+          console.log("User Data:", data.data);
 
-      const response = await fetch(url, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          "x-api-key": apiKey, // Add API key from .env
-        },
-      });
+          setUserData(data.data);
+          setStation(station);
 
-      if (response.status === 200) {
-        const result = await response.json(); // Parse the response JSON
-        toast.success("Login Complete.");
-        console.log("User Data:", result.data);
+          // Save station and username to localStorage
+          localStorage.setItem("station", station);
+          localStorage.setItem("username", username);
 
-        setUserData(result.data);
-        setStation(station);
-
-        // Navigate to /scanQR on successful login
-        navigate("/scanQR");
-      } else {
-        const errorResponse = await response.json();
-        console.error("API Response Error:", errorResponse);
-        throw new Error(`HTTP error! Status: ${response.status} - ${errorResponse.message || 'Unauthorized'}`);
+          // Navigate to /scanQR on successful login
+          navigate("/scanQR");
+        } else {
+          console.error("API Response Error:", data);
+          throw new Error(`HTTP error! Status: ${response.status} - ${data.message || 'Unauthorized'}`);
+        }
+      } catch (error) {
+        console.error("Error logging in:", error);
+        throw error; // Re-throw the error to be caught by the outer catch block
       }
     } catch (error) {
       console.error("Error logging in:", error);

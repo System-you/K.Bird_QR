@@ -1,14 +1,20 @@
 import { defineConfig } from 'vite';
-import reactRefresh from '@vitejs/plugin-react-refresh';
+import react from '@vitejs/plugin-react';
 
 export default defineConfig({
-  plugins: [reactRefresh()],
+  plugins: [react()],
   server: {
     proxy: {
       '/api': {
         target: 'http://203.170.129.88:9078',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, ''),
+        rewrite: (path) => {
+          console.log(`Rewriting path from ${path} to ${path.replace(/^\/api/, '')}`);
+          return path.replace(/^\/api/, '');
+        },
+        configure: (proxy, options) => {
+          console.log('Proxy configured with options:', options);
+        },
       },
     },
   },

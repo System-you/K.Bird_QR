@@ -33,7 +33,7 @@ h2 {
 }
 
 .form-label {
-  margin-bottom: 10px;
+  margin-bottom: -10px;
   width: 100%;
   font-size: 14px; /* Adjusted for mobile */
   color: #333;
