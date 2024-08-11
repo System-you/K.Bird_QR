@@ -1,45 +1,36 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Html5QrcodeScanner } from "html5-qrcode";
 import Modal from "react-modal";
 import toast, { Toaster } from "react-hot-toast";
-import { fetchData, debounce, handlePostData } from "../../database/fetchData"; // Import fetchData, debounce, and handlePostData
+import useUserStore from "../../config/store"; // Import Zustand store
 import "./ScanQR.css"; // Ensure you have the CSS for styling
 
 const ScanQR = () => {
   const navigate = useNavigate();
+  const {
+    username,
+    station,
+    fetchedData,
+    loading,
+    error,
+    fetchData,
+    handlePostData,
+    setFetchedData,
+    setError,
+  } = useUserStore();
+
   const [scannedData, setScannedData] = useState(null);
   const [showModal, setShowModal] = useState(false);
-  const [fetchedData, setFetchedData] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
   const [selectedStatus, setSelectedStatus] = useState("");
-  const [username, setUsername] = useState(localStorage.getItem("username") || "");
-  const [station, setStation] = useState(localStorage.getItem("station") || "");
   const [isCameraActive, setIsCameraActive] = useState(false);
 
   useEffect(() => {
-    console.log("Username:", username);
-    console.log("Station:", station);
-  
     if (!username || !station) {
       toast.error("Username and station are required. Please log in again.");
       navigate("/login");
     }
   }, [username, station, navigate]);
-  
-  const fetchDataCallback = useCallback(
-    async (qrCode, station) => {
-      try {
-        const data = await fetchData(qrCode, station, setLoading, setFetchedData, setError, closeModal);
-        setFetchedData(data);
-        console.log("Fetched data:", data);
-      } catch (err) {
-        console.error("Fetch error:", err);
-      }
-    },
-    []
-  );
 
   useEffect(() => {
     if (isCameraActive) {
@@ -50,31 +41,22 @@ const ScanQR = () => {
           qrbox: {
             width: 250,
             height: 250,
-
           },
-          disableFlip: true, // Disable the "Scan paused" text
+          disableFlip: true,
         },
         false
       );
 
-      const onScanSuccess = async (decodedText, decodedResult) => {
-        console.log("Scan successful:", decodedText);
+      const onScanSuccess = async (decodedText) => {
         setScannedData(decodedText);
-        await fetchDataCallback(decodedText, station); // Fetch data when scan is successful
+        await fetchData(decodedText, station, closeModal);
         setShowModal(true);
       };
 
-      const onScanFailure = (error) => {
-        return
-      };
-
-      htmlScanner.render(onScanSuccess, onScanFailure);
-
-      return () => {
-        htmlScanner.clear();
-      };
+      htmlScanner.render(onScanSuccess, () => {});
+      return () => htmlScanner.clear();
     }
-  }, [fetchDataCallback, isCameraActive, username, station]);
+  }, [fetchData, isCameraActive, station]);
 
   const closeModal = () => {
     setShowModal(false);
@@ -83,36 +65,16 @@ const ScanQR = () => {
     setError(null);
   };
 
-  const handleStatusChange = (e) => {
-    setSelectedStatus(e.target.value);
-    console.log("Selected status changed to:", e.target.value);
-  };
-
   const handleConfirm = async () => {
-    if (scannedData&&fetchedData["total_scans"]<fetchedData["inventory"]) {
-      console.log(`Status confirmed: ${selectedStatus}`);
+    if (scannedData && fetchedData["total_scans"] < fetchedData["inventory"]) {
       try {
-        await handlePostData(fetchedData, station, username, selectedStatus, setLoading); // Call the function to send POST request
-        toast.success("อัพโหลดเรียบร้อย",{duration: 5000});
-        
-        // Introduce a small delay before fetching the updated data
-        setTimeout(async () => {
-          await fetchDataCallback(scannedData, station); // Refresh the fetched data after update
-        }, 1000);
-
+        await handlePostData(station, username, selectedStatus);
+        toast.success("อัพโหลดเรียบร้อย", { duration: 5000 });
         closeModal();
-        let total = Number(fetchedData["total_scans"]);
-        total = total + 1;
-        const inventory = Number(fetchedData["inventory"]);
-
-        // toast.success("อัพโหลดไปแล้ว "+total+'/'+inventory,{duration: 5000});
-        
       } catch (error) {
         toast.error("Error updating QR Code. Please try again.");
-        console.error("Error updating QR Code:", error.message);
       }
-    }
-    else if(fetchedData["total_scans"]>=fetchedData["inventory"]){
+    } else if (fetchedData["total_scans"] >= fetchedData["inventory"]) {
       toast.error("ไม่สามารถแสกนได้ เนื่องจากได้แสกนไปแล้วทั้งหมด");
     }
   };
@@ -130,7 +92,7 @@ const ScanQR = () => {
       <div className="form-container">
         <label className="form-label">
           Select Status:
-          <select value={selectedStatus} onChange={handleStatusChange} className="form-input">
+          <select value={selectedStatus} onChange={(e) => setSelectedStatus(e.target.value)} className="form-input">
             <option value="">Select...</option>
             <option value="A">A-สำเร็จ</option>
             <option value="B">B-เสีย</option>
@@ -161,10 +123,10 @@ const ScanQR = () => {
                   <p>ความกว้าง: {fetchedData["part_width"]}</p>
                   <p>ความยาว: {fetchedData["part_length"]}</p>
                   <p>ชื่อวัสดุ: {fetchedData["part_matname"]}</p>
-                  <p>สถานะ: {fetchedData["sts_name"]}</p> {/* Show fetched status */}
+                  <p>สถานะ: {fetchedData["sts_name"]}</p>
                   <p>Inventory ทั้งหมด : {fetchedData["inventory"]}</p>
                   <p>แสกนไปแล้ว : {fetchedData["total_scans"]}</p>
-                  <p>New Status: {selectedStatus}</p> {/* Show selected status */}
+                  <p>New Status: {selectedStatus}</p>
                   <div className="modal-buttons">
                     <button onClick={handleConfirm}>OK</button>
                     <button onClick={closeModal}>Cancel</button>

@@ -1,5 +1,5 @@
 import toast from "react-hot-toast";
-
+const API_URL =  "https://3459-2403-6200-8882-21fa-3d94-36af-f490-9625.ngrok-free.app"
 const apiKey = import.meta.env.VITE_REACT_APP_API_KEY;
 export const debounce = (func, wait) => {
   let timeout;
@@ -21,7 +21,7 @@ export const fetchData = debounce(async (qrCode, station, setLoading, setFetched
       throw new Error("Please fill in all fields");
     }
     const timestamp = new Date().getTime();
-    const url = `https://api-qr-demo.appsystemyou.com/qr-code?station=${station}&qrCode=${qrCode}&t=${timestamp}`;
+    const url = `${API_URL}/qr-code?station=${station}&qrCode=${qrCode}&t=${timestamp}`;
     console.log("URL:", url);
     const response = await fetch(url, {
       method: "GET",
@@ -67,7 +67,7 @@ export const handlePostData = async (fetchedData, station, username, selectedSta
     console.log("Updating with Employee Name:", emp_name);
     console.log("Updating with Part Status:", part_status);
     const timestamp = new Date().getTime();
-    const url = `https://api-qr-demo.appsystemyou.com/qr-code?partmodel=${part_model}&partId=${part_id}&station=${part_station}&empName=${emp_name}&status=${part_status}&t=${timestamp}`;
+    const url = `${API_URL}/qr-code?partmodel=${part_model}&partId=${part_id}&station=${part_station}&empName=${emp_name}&status=${part_status}&t=${timestamp}`;
 
     const response = await fetch(url, {
       method: "PATCH",
