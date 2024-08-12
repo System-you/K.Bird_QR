@@ -1,12 +1,11 @@
-
-
 body {
   margin: 0;
   display: flex;
   place-items: center;
   min-width: 100vw;
-  min-height: 100vh;
+  min-height: 100%;
   background-color: white; /* Set background color to white */
+  overflow-y: auto; /* Allow vertical scrolling */
 }
 
 a {

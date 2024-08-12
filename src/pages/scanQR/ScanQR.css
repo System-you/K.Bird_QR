@@ -1,9 +1,8 @@
-/* Prevent horizontal scrolling */
+/* Allow vertical scrolling */
 body, html {
   margin: 0;
   padding: 0;
-  overflow-x: hidden; /* Prevent horizontal scrolling */
-  overflow-y: auto; /* Allow vertical scrolling if necessary */
+  overflow-y: auto; /* Allow vertical scrolling */
   width: 100%;
   height: 100%;
 }
@@ -107,7 +106,7 @@ body, html {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  overflow: hidden; /* Prevent container from scrolling */
   padding: 10px;
   box-sizing: border-box; /* Ensure padding is included in the element's total width and height */
+  overflow-y: auto; /* Allow vertical scrolling */
 }

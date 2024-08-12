@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Html5QrcodeScanner } from "html5-qrcode";
 import Modal from "react-modal";
@@ -19,23 +19,32 @@ const ScanQR = () => {
   const [selectedStatus, setSelectedStatus] = useState("");
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [autoConfirm, setAutoConfirm] = useState(false);
+  const [toastDisplayed, setToastDisplayed] = useState(false);
 
   const [partModels, setPartModels] = useState([]); 
   const [filteredModels, setFilteredModels] = useState([]); 
   const [selectedPartModel, setSelectedPartModel] = useState(""); 
   const [materialsData, setMaterialsData] = useState([]); 
 
-  let htmlScanner = null;
-  let errorShown = false;
+  const selectedPartModelRef = useRef(selectedPartModel);
+  const autoConfirmRef = useRef(autoConfirm);
+  const selectedStatusRef = useRef(selectedStatus);
 
-  // Protect the page and ensure the user is logged in
+  selectedPartModelRef.current = selectedPartModel;
+  autoConfirmRef.current = autoConfirm;
+
+  useEffect(() => {
+    selectedStatusRef.current = selectedStatus;
+  }, [selectedStatus]);
+
+  let htmlScanner = null;
+
   useEffect(() => {
     if (!username || !station) {
       toast.error("Username and station are required. Please log in again.");
       navigate("/login");
     }
 
-    // Prevent back button navigation
     const handleBackButton = (event) => {
       event.preventDefault();
       window.history.pushState(null, null, window.location.pathname);
@@ -50,7 +59,6 @@ const ScanQR = () => {
     };
   }, [username, station, navigate]);
 
-  // Load part models
   useEffect(() => {
     const loadPartModels = async () => {
       await fetchPartModel(setLoading, setPartModels, setError); 
@@ -89,16 +97,35 @@ const ScanQR = () => {
   };
 
   const validatePartModel = () => {
-    const isValid = partModels.some((model) => model.part_model === selectedPartModel);
+    const isValid = partModels.some((model) => model.part_model === selectedPartModelRef.current);
     if (!isValid) {
       toast.error("Please select a valid part model from the suggestions.");
     }
     return isValid;
   };
 
+  const initializeScanner = () => {
+    htmlScanner = new Html5QrcodeScanner(
+      "reader",
+      {
+        fps: 10,
+        qrbox: {
+          width: 250,
+          height: 250,
+        },
+        disableFlip: true,
+      },
+      false
+    );
+    
+    htmlScanner.render(onScanSuccess, (errorMessage) => {
+      return;
+    });
+  }; 
+  
   const toggleCamera = () => {
     if (selectedStatus && validatePartModel()) {
-      setIsCameraActive(!isCameraActive);
+      setIsCameraActive((prev) => !prev);
     } else {
       if (!selectedStatus) {
         toast.error("Please select a status before activating the camera.");
@@ -109,88 +136,108 @@ const ScanQR = () => {
     }
   };
 
-  const closeModal = () => {
-    setShowModal(false);
-  };
-
-  const handleConfirm = async () => {
-    console.log("handleConfirm called");
-    if (scannedData && fetchedData["sts_count"] < fetchedData["matt_count"]) {
-      try {
-        console.log("Posting data...");
-        await handlePostData(fetchedData, station, username, selectedStatus, setLoading);
-        console.log("Data posted successfully");
-        toast.success("อัพโหลดเรียบร้อย", { duration: 5000 });
-        closeModal();
-      } catch (error) {
-        console.error("Error in handleConfirm:", error.message);
-        toast.error("Error updating QR Code. Please try again.");
-      }
-    } else if (fetchedData["sts_count"] >= fetchedData["matt_count"]) {
-      toast.error("ไม่สามารถแสกนได้ เนื่องจากได้แสกนไปแล้วทั้งหมด");
-    }
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem("username");
-    localStorage.removeItem("station");
-    navigate("/login");
-  };
-
   useEffect(() => {
-    if (isCameraActive && !htmlScanner) {
-      htmlScanner = new Html5QrcodeScanner(
-        "reader",
-        {
-          fps: 10,
-          qrbox: {
-            width: 250,
-            height: 250,
-          },
-          disableFlip: true,
-        },
-        false
-      );
-  
-      const onScanSuccess = async (decodedText) => {
-        setScannedData(decodedText);
-        
-        try {
-          await fetchData(decodedText, station, setLoading, setFetchedData, setError, () => {});
-
-          if (fetchedData && fetchedData.partmodel !== selectedPartModel) {
-            if (!errorShown) {
-              console.log("Part model does not match");
-              toast.error("part model ไม่ตรงกับที่เลือกไว้ โปรดแสกนใหม่", { duration: 5000 });
-              errorShown = true;
-            }
-            return;
-          }
-
-          if (autoConfirm) {
-            await handleConfirm();
-          } else {
-            setShowModal(true);
-          }
-
-        } catch (error) {
-          console.error("Error processing scan:", error);
-        }
-      };
-  
-      htmlScanner.render(onScanSuccess, (errorMessage) => {
-        return;
+    if (isCameraActive) {
+      initializeScanner();
+    } else if (htmlScanner) {
+      htmlScanner.clear().catch((error) => {
+        console.error("Failed to clear QR code scanner: ", error);
       });
     }
 
     return () => {
       if (htmlScanner) {
         htmlScanner.clear().catch((error) => {
-          console.error("Failed to clear QR code scanner: ", error);
-        });
+        console.error("Failed to clear QR code scanner: ", error);
+      });
       }
     };
-  }, [isCameraActive, station, autoConfirm, selectedPartModel, fetchedData]);
+  }, [isCameraActive]);
+
+  const closeModal = () => {
+    setShowModal(false);
+    setToastDisplayed(false);
+  };
+
+  const handleConfirm = useCallback(async () => {
+    console.log("handleConfirm called");
+
+    if (!fetchedData) {
+        console.error("fetchedData is null or undefined inside handleConfirm");
+        toast.error("Error: Fetched data is invalid. Please try again.");
+        return; // Exit early if fetchedData is not set
+    }
+
+    if (scannedData && fetchedData) {  
+        if (fetchedData["sts_count"] < fetchedData["matt_count"]) {
+            try {
+                console.log("Selected Status:", selectedStatusRef.current);
+                console.log("Posting data...");
+                await handlePostData(fetchedData, station, username, selectedStatusRef.current, setLoading);
+                console.log("Data posted successfully");
+                if (!toastDisplayed) {
+                    toast.success("อัพโหลดเรียบร้อย", { duration: 5000 });
+                    setToastDisplayed(true);
+                }
+                closeModal();
+            } catch (error) {
+                console.error("Error in handleConfirm:", error.message);
+                toast.error("Error updating QR Code. Please try again.");
+            }
+        } else {
+            toast.error("ไม่สามารถแสกนได้ เนื่องจากได้แสกนไปแล้วทั้งหมด");
+        }
+    } else {
+        console.error("scannedData or fetchedData is null or undefined inside handleConfirm");
+        toast.error("Error: Fetched data is invalid. Please try again.");
+    }
+}, [fetchedData, scannedData, station, username, toastDisplayed]);
+
+const onScanSuccess = useCallback(async (decodedText) => {
+  setScannedData(decodedText);
+  console.log(`Scanned QR Code: ${decodedText}`);
+
+  try {
+      await fetchData(decodedText, station, setLoading, async (data) => {
+          console.log("Fetched Data:", data);
+          if (data) {
+              setFetchedData(data); // Ensure this is set
+              if (data.partmodel !== selectedPartModelRef.current) {
+                  toast.error("part model ไม่ตรงกับที่เลือกไว้ โปรดแสกนใหม่", { duration: 5000 });
+                  return;
+              }
+
+              if (autoConfirmRef.current) {
+                  console.log("Auto confirming...");
+                  await handleConfirm(); 
+              } else {
+                  console.log("Showing modal for manual confirmation...");
+                  setShowModal(true);
+              }
+          } else {
+              console.error("Fetched data is null or undefined after fetch.");
+              toast.error("Error: Fetched data is invalid. Please try again.");
+          }
+      }, setError, closeModal);
+  } catch (error) {
+      console.error("Error processing scan:", error);
+      toast.error("Error processing scan. Please try again.");
+  }
+}, [station, handleConfirm]);
+
+const handleLogout = () => {
+  localStorage.removeItem("username");
+  localStorage.removeItem("station");
+  navigate("/login");
+};
+
+const handleAutoConfirmToggle = () => {
+  setAutoConfirm((prev) => {
+      autoConfirmRef.current = !prev;
+      console.log("Auto Confirm Toggled:", !prev);
+      return !prev;
+  });
+};
 
   return (
     <div className="container">
@@ -202,7 +249,7 @@ const ScanQR = () => {
           <input 
             type="checkbox" 
             checked={autoConfirm} 
-            onChange={() => setAutoConfirm(!autoConfirm)} 
+            onChange={handleAutoConfirmToggle} 
             style={{ marginBottom: "20px" }}
           />
           เปิดยืนยันอัตโนมัติ
