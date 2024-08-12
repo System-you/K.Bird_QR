@@ -2,7 +2,7 @@ import toast from "react-hot-toast";
 import { debounce } from 'lodash';
 
 
-const API_URL = "http://localhost:8787";
+const API_URL = import.meta.env.VITE_REACT_APP_API_URL;
 const apiKey = import.meta.env.VITE_REACT_APP_API_KEY;
 
 

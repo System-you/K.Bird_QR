@@ -16,8 +16,8 @@ const Login = () => {
     try {
       // Use import.meta.env for Vite
       const apiKey = import.meta.env.VITE_REACT_APP_API_KEY;
-      console.log("API Key:", apiKey);
-
+      const apiUrl = import.meta.env.VITE_REACT_APP_API_URL;
+      
       if (!apiKey) {
         throw new Error("API key is missing");
       }
@@ -25,7 +25,7 @@ const Login = () => {
         throw new Error("Please fill in all fields");
       }
       
-      const url = `http://localhost:8787/auth/login/${username}/${password}`;
+      const url = `${apiUrl}/auth/login/${username}/${password}`;
       
       let response;
       try {
@@ -45,11 +45,11 @@ const Login = () => {
         }
       
         const data = await response.json();
-        console.log("Login successful:", data);
+        
 
         if (response.status === 200) {
           toast.success("Login Complete.");
-          console.log("User Data:", data.data);
+          
 
           setUserData(data.data);
           setStation(station);
@@ -65,11 +65,9 @@ const Login = () => {
           throw new Error(`HTTP error! Status: ${response.status} - ${data.message || 'Unauthorized'}`);
         }
       } catch (error) {
-        console.error("Error logging in:", error);
         throw error; // Re-throw the error to be caught by the outer catch block
       }
     } catch (error) {
-      console.error("Error logging in:", error);
       toast.error(error.message);
     } finally {
       setLoading(false);
