@@ -25,6 +25,9 @@ const ScanQR = () => {
   const [selectedPartModel, setSelectedPartModel] = useState(""); 
   const [materialsData, setMaterialsData] = useState([]); 
 
+  let htmlScanner = null;
+  let errorShown = false;
+
   // Protect the page and ensure the user is logged in
   useEffect(() => {
     if (!username || !station) {
@@ -59,7 +62,6 @@ const ScanQR = () => {
   const loadPartMaterials = useCallback(
     async (model) => {
       if (model && station) {
-        console.log("Fetching materials for:", model);
         await fetchPartModelMaterials(model, station, setLoading, setMaterialsData, setError);
       }
     },
@@ -136,8 +138,8 @@ const ScanQR = () => {
   };
 
   useEffect(() => {
-    if (isCameraActive) {
-      const htmlScanner = new Html5QrcodeScanner(
+    if (isCameraActive && !htmlScanner) {
+      htmlScanner = new Html5QrcodeScanner(
         "reader",
         {
           fps: 10,
@@ -152,26 +154,43 @@ const ScanQR = () => {
   
       const onScanSuccess = async (decodedText) => {
         setScannedData(decodedText);
-        await fetchData(decodedText, station, setLoading, setFetchedData, setError, closeModal);
         
-        if (autoConfirm) {
-          await handleConfirm();
-        } else {
-          setShowModal(true);
+        try {
+          await fetchData(decodedText, station, setLoading, setFetchedData, setError, () => {});
+
+          if (fetchedData && fetchedData.partmodel !== selectedPartModel) {
+            if (!errorShown) {
+              console.log("Part model does not match");
+              toast.error("part model ไม่ตรงกับที่เลือกไว้ โปรดแสกนใหม่", { duration: 5000 });
+              errorShown = true;
+            }
+            return;
+          }
+
+          if (autoConfirm) {
+            await handleConfirm();
+          } else {
+            setShowModal(true);
+          }
+
+        } catch (error) {
+          console.error("Error processing scan:", error);
         }
       };
   
       htmlScanner.render(onScanSuccess, (errorMessage) => {
         return;
       });
-  
-      return () => {
+    }
+
+    return () => {
+      if (htmlScanner) {
         htmlScanner.clear().catch((error) => {
           console.error("Failed to clear QR code scanner: ", error);
         });
-      };
-    }
-  }, [isCameraActive, station, autoConfirm]);
+      }
+    };
+  }, [isCameraActive, station, autoConfirm, selectedPartModel, fetchedData]);
 
   return (
     <div className="container">

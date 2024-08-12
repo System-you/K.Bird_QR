@@ -18,7 +18,6 @@ export const fetchData = debounce(async (qrCode, station, setLoading, setFetched
 
     const timestamp = new Date().getTime();
     const url = `${API_URL}/qr-code?station=${station}&qrCode=${qrCode}&t=${timestamp}`;
-    console.log("URL:", url);
     
     const response = await fetch(url, {
       method: "GET",
@@ -34,7 +33,6 @@ export const fetchData = debounce(async (qrCode, station, setLoading, setFetched
     }
 
     const responseData = await response.json();
-    console.log("Response data:", responseData);
 
     setFetchedData(responseData.data);
 
@@ -52,7 +50,6 @@ export const handlePostData = async (fetchedData, station, username, selectedSta
   try {
     setLoading(true);
     const url = `${API_URL}/qr-code?partmodel=${fetchedData.partmodel}&partId=${fetchedData.partId}&station=${station}&empName=${username}&status=${selectedStatus}`;
-    console.log("POST URL:", url);
 
     const response = await fetch(url, {
       method: "PATCH",
@@ -97,7 +94,6 @@ export const fetchPartModel = async (setLoading, setFetchedData, setError) => {
     }
 
     const data = await response.json();
-    console.log("Full API Response:", data);
 
     if (Array.isArray(data) && data.length > 0) {
       const sortedData = data.sort((a, b) => a.part_model.localeCompare(b.part_model));
