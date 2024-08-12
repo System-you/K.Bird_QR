@@ -18,20 +18,36 @@ const ScanQR = () => {
   const [showModal, setShowModal] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState("");
   const [isCameraActive, setIsCameraActive] = useState(false);
-  const [autoConfirm, setAutoConfirm] = useState(false); // New state for checkbox
+  const [autoConfirm, setAutoConfirm] = useState(false);
 
   const [partModels, setPartModels] = useState([]); 
   const [filteredModels, setFilteredModels] = useState([]); 
   const [selectedPartModel, setSelectedPartModel] = useState(""); 
   const [materialsData, setMaterialsData] = useState([]); 
 
+  // Protect the page and ensure the user is logged in
   useEffect(() => {
     if (!username || !station) {
       toast.error("Username and station are required. Please log in again.");
       navigate("/login");
     }
+
+    // Prevent back button navigation
+    const handleBackButton = (event) => {
+      event.preventDefault();
+      window.history.pushState(null, null, window.location.pathname);
+      toast.error("Cannot go back to the previous page.");
+    };
+
+    window.history.pushState(null, null, window.location.pathname);
+    window.addEventListener("popstate", handleBackButton);
+
+    return () => {
+      window.removeEventListener("popstate", handleBackButton);
+    };
   }, [username, station, navigate]);
 
+  // Load part models
   useEffect(() => {
     const loadPartModels = async () => {
       await fetchPartModel(setLoading, setPartModels, setError); 
@@ -97,7 +113,7 @@ const ScanQR = () => {
 
   const handleConfirm = async () => {
     console.log("handleConfirm called");
-    if (scannedData && fetchedData["total_scans"] < fetchedData["inventory"]) {
+    if (scannedData && fetchedData["sts_count"] < fetchedData["matt_count"]) {
       try {
         console.log("Posting data...");
         await handlePostData(fetchedData, station, username, selectedStatus, setLoading);
@@ -108,9 +124,15 @@ const ScanQR = () => {
         console.error("Error in handleConfirm:", error.message);
         toast.error("Error updating QR Code. Please try again.");
       }
-    } else if (fetchedData["total_scans"] >= fetchedData["inventory"]) {
+    } else if (fetchedData["sts_count"] >= fetchedData["matt_count"]) {
       toast.error("ไม่สามารถแสกนได้ เนื่องจากได้แสกนไปแล้วทั้งหมด");
     }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("username");
+    localStorage.removeItem("station");
+    navigate("/login");
   };
 
   useEffect(() => {
@@ -133,10 +155,8 @@ const ScanQR = () => {
         await fetchData(decodedText, station, setLoading, setFetchedData, setError, closeModal);
         
         if (autoConfirm) {
-          // Automatically post data without showing the modal
           await handleConfirm();
         } else {
-          // Show the modal for manual confirmation
           setShowModal(true);
         }
       };
@@ -151,11 +171,14 @@ const ScanQR = () => {
         });
       };
     }
-  }, [isCameraActive, station, autoConfirm]); // Added autoConfirm to the dependency array
+  }, [isCameraActive, station, autoConfirm]);
 
   return (
     <div className="container">
       <div className="form-container">
+        <button onClick={handleLogout} className="logout-button">
+          Logout
+        </button>
         <label className="form-label">
           <input 
             type="checkbox" 
@@ -236,8 +259,8 @@ const ScanQR = () => {
                   <p>ความยาว: {fetchedData["part_length"]}</p>
                   <p>ชื่อวัสดุ: {fetchedData["part_matname"]}</p>
                   <p>สถานะ: {fetchedData["sts_name"]}</p>
-                  <p>Inventory ทั้งหมด : {fetchedData["inventory"]}</p>
-                  <p>แสกนไปแล้ว : {fetchedData["total_scans"]}</p>
+                  <p>Inventory ทั้งหมด : {fetchedData["matt_count"]}</p>
+                  <p>แสกนไปแล้ว : {fetchedData["sts_count"]}</p>
                   <p>New Status: {selectedStatus}</p>
                   <div className="modal-buttons">
                     <button onClick={handleConfirm}>OK</button>
