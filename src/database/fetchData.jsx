@@ -65,7 +65,6 @@ export const handlePostData = async (fetchedData, station, username, selectedSta
     }
 
     const result = await response.json();
-    console.log("POST Result:", result);
     toast.success(result.message || "อัพโหลดเรียบร้อย");
 
   } catch (error) {
@@ -107,7 +106,7 @@ export const fetchPartModel = async (setLoading, setFetchedData, setError) => {
       throw new Error("Data format is incorrect. Expected an array.");
     }
   } catch (error) {
-    console.error("Error fetching part model:", error);
+    // console.error("Error fetching part model:", error);
     setError(error.message);
     toast.error("Failed to fetch part model data");
   } finally {
@@ -135,12 +134,11 @@ export const fetchPartModelMaterials = async (partModel, station, setLoading, se
     }
 
     const data = await response.json();
-    console.log("Fetched Materials Data:", data);
 
     setMaterialsData(data.data || []);
 
   } catch (error) {
-    console.error("Error fetching part model materials:", error);
+    // console.error("Error fetching part model materials:", error);
     setError(error.message);
     toast.error("Failed to fetch part model materials");
   } finally {
