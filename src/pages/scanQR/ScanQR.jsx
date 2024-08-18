@@ -4,12 +4,19 @@ import { Html5QrcodeScanner } from "html5-qrcode";
 import Modal from "react-modal";
 import toast, { Toaster } from "react-hot-toast";
 import "./ScanQR.css";
-import { fetchPartModel, fetchPartModelMaterials, fetchData, handlePostData } from "../../database/fetchData";
+import {
+  fetchPartModel,
+  fetchPartModelMaterials,
+  fetchData,
+  handlePostData,
+} from "../../database/fetchData";
 
 const ScanQR = () => {
   const navigate = useNavigate();
 
-  const [username, setUsername] = useState(localStorage.getItem("username") || "");
+  const [username, setUsername] = useState(
+    localStorage.getItem("username") || ""
+  );
   const [station, setStation] = useState(localStorage.getItem("station") || "");
   const [fetchedData, setFetchedData] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -21,15 +28,15 @@ const ScanQR = () => {
   const [autoConfirm, setAutoConfirm] = useState(false);
   const [toastDisplayed, setToastDisplayed] = useState(false);
 
-  const [partModels, setPartModels] = useState([]); 
-  const [filteredModels, setFilteredModels] = useState([]); 
-  const [selectedPartModel, setSelectedPartModel] = useState(""); 
-  const [materialsData, setMaterialsData] = useState([]); 
+  const [partModels, setPartModels] = useState([]);
+  const [filteredModels, setFilteredModels] = useState([]);
+  const [selectedPartModel, setSelectedPartModel] = useState("");
+  const [materialsData, setMaterialsData] = useState([]);
 
   const selectedPartModelRef = useRef(selectedPartModel);
   const autoConfirmRef = useRef(autoConfirm);
   const selectedStatusRef = useRef(selectedStatus);
-
+  const [isVisible, setIsVisible] = useState(false);
   selectedPartModelRef.current = selectedPartModel;
   autoConfirmRef.current = autoConfirm;
 
@@ -61,7 +68,7 @@ const ScanQR = () => {
 
   useEffect(() => {
     const loadPartModels = async () => {
-      await fetchPartModel(setLoading, setPartModels, setError); 
+      await fetchPartModel(setLoading, setPartModels, setError);
     };
 
     loadPartModels();
@@ -70,7 +77,13 @@ const ScanQR = () => {
   const loadPartMaterials = useCallback(
     async (model) => {
       if (model && station) {
-        await fetchPartModelMaterials(model, station, setLoading, setMaterialsData, setError);
+        await fetchPartModelMaterials(
+          model,
+          station,
+          setLoading,
+          setMaterialsData,
+          setError
+        );
       }
     },
     [station]
@@ -97,7 +110,9 @@ const ScanQR = () => {
   };
 
   const validatePartModel = () => {
-    const isValid = partModels.some((model) => model.part_model === selectedPartModelRef.current);
+    const isValid = partModels.some(
+      (model) => model.part_model === selectedPartModelRef.current
+    );
     if (!isValid) {
       toast.error("Please select a valid part model from the suggestions.");
     }
@@ -117,12 +132,31 @@ const ScanQR = () => {
       },
       false
     );
-    
+
     htmlScanner.render(onScanSuccess, (errorMessage) => {
       return;
     });
-  }; 
-  
+
+    // Apply custom styles after the scanner is initialized
+    setTimeout(() => {
+      const buttons = [
+        document.querySelector("#html5-qrcode-button-camera-permission"),
+        document.querySelector("#html5-qrcode-button-camera-start"),
+        document.querySelector("#html5-qrcode-button-camera-stop"),
+        document.querySelector("#html5-qrcode-button-scan-qr"),
+      ];
+
+      buttons.forEach((button) => {
+        if (button) {
+          button.style.fontSize = "14px";
+          button.style.padding = "8px";
+          button.style.color = "white";
+          button.style.backgroundColor = "black";
+        }
+      });
+    }, 500); // Delay to ensure buttons are rendered
+  };
+
   const toggleCamera = () => {
     if (selectedStatus && validatePartModel()) {
       setIsCameraActive((prev) => !prev);
@@ -131,7 +165,9 @@ const ScanQR = () => {
         toast.error("Please select a status before activating the camera.");
       }
       if (!validatePartModel()) {
-        toast.error("Please select a valid part model before activating the camera.");
+        toast.error(
+          "Please select a valid part model before activating the camera."
+        );
       }
     }
   };
@@ -148,8 +184,8 @@ const ScanQR = () => {
     return () => {
       if (htmlScanner) {
         htmlScanner.clear().catch((error) => {
-        // console.error("Failed to clear QR code scanner: ", error);
-      });
+          // console.error("Failed to clear QR code scanner: ", error);
+        });
       }
     };
   }, [isCameraActive]);
@@ -165,21 +201,33 @@ const ScanQR = () => {
       toast.error("Error: Fetched data is invalid. Please try again.");
       return; // Exit early if fetchedData is not set
     }
-  
+
     if (scannedData && fetchedData) {
       if (fetchedData["sts_count"] < fetchedData["matt_count"]) {
         try {
-          await handlePostData(fetchedData, station, username, selectedStatusRef.current, setLoading);
+          await handlePostData(
+            fetchedData,
+            station,
+            username,
+            selectedStatusRef.current,
+            setLoading
+          );
           console.log("Data posted successfully");
-  
+
           if (!toastDisplayed) {
             toast.success("อัพโหลดเรียบร้อย", { duration: 5000 });
             setToastDisplayed(true);
           }
-  
+
           // Refresh the materials data after successful confirmation
-          await fetchPartModelMaterials(selectedPartModelRef.current, station, setLoading, setMaterialsData, setError);
-  
+          await fetchPartModelMaterials(
+            selectedPartModelRef.current,
+            station,
+            setLoading,
+            setMaterialsData,
+            setError
+          );
+
           closeModal();
         } catch (error) {
           toast.error("Error updating QR Code. Please try again.");
@@ -191,64 +239,79 @@ const ScanQR = () => {
       toast.error("Error: Fetched data is invalid. Please try again.");
     }
   }, [fetchedData, scannedData, station, username, toastDisplayed]);
-  
-const onScanSuccess = useCallback(async (decodedText) => {
-  setScannedData(decodedText);
-  // console.log(`Scanned QR Code: ${decodedText}`);
 
-  try {
-      await fetchData(decodedText, station, setLoading, async (data) => {
-          if (data) {
+  const onScanSuccess = useCallback(
+    async (decodedText) => {
+      setScannedData(decodedText);
+      // console.log(`Scanned QR Code: ${decodedText}`);
+
+      try {
+        await fetchData(
+          decodedText,
+          station,
+          setLoading,
+          async (data) => {
+            if (data) {
               setFetchedData(data); // Ensure this is set
               if (data.partmodel !== selectedPartModelRef.current) {
-                  toast.error("part model ไม่ตรงกับที่เลือกไว้ โปรดแสกนใหม่", { duration: 5000 });
-                  return;
+                toast.error("part model ไม่ตรงกับที่เลือกไว้ โปรดแสกนใหม่", {
+                  duration: 5000,
+                });
+                return;
               }
 
               if (autoConfirmRef.current) {
-                  await handleConfirm(); 
+                await handleConfirm();
               } else {
-                  setShowModal(true);
+                setShowModal(true);
               }
-          } else {
+            } else {
               toast.error("Error: Fetched data is invalid. Please try again.");
-          }
-      }, setError, closeModal);
-  } catch (error) {
-      toast.error("Error processing scan. Please try again.");
-  }
-}, [station, handleConfirm]);
+            }
+          },
+          setError,
+          closeModal
+        );
+      } catch (error) {
+        toast.error("Error processing scan. Please try again.");
+      }
+    },
+    [station, handleConfirm]
+  );
 
-const handleLogout = () => {
-  localStorage.removeItem("username");
-  localStorage.removeItem("station");
-  navigate("/login");
-};
+  const handleLogout = () => {
+    localStorage.removeItem("username");
+    localStorage.removeItem("station");
+    navigate("/login");
+  };
 
-const handleAutoConfirmToggle = () => {
-  setAutoConfirm((prev) => {
+  const handleAutoConfirmToggle = () => {
+    setAutoConfirm((prev) => {
       autoConfirmRef.current = !prev;
       return !prev;
-  });
-};
+    });
+  };
 
   return (
     <div className="container">
       <div className="form-container">
-        <button onClick={handleLogout} className="logout-button">
+        <button
+          onClick={handleLogout}
+          style={{ color: "white", backgroundColor: "black" }}
+        >
           Logout
         </button>
         <label className="form-label">
-          <input 
-            type="checkbox" 
-            checked={autoConfirm} 
-            onChange={handleAutoConfirmToggle} 
+          <input
+            type="checkbox"
+            checked={autoConfirm}
+            onChange={handleAutoConfirmToggle}
             style={{ marginBottom: "20px" }}
           />
           เปิดยืนยันอัตโนมัติ
         </label>
         <label className="form-label">
-          Select Part Model:
+          Select Part Model(Project Name):
           <input
             type="text"
             value={selectedPartModel}
@@ -272,7 +335,11 @@ const handleAutoConfirmToggle = () => {
         </label>
         <label className="form-label">
           Select Status:
-          <select value={selectedStatus} onChange={(e) => setSelectedStatus(e.target.value)} className="form-input">
+          <select
+            value={selectedStatus}
+            onChange={(e) => setSelectedStatus(e.target.value)}
+            className="form-input"
+          >
             <option value="">Select...</option>
             <option value="A">A-สำเร็จ</option>
             <option value="B">B-เสีย</option>
@@ -283,24 +350,33 @@ const handleAutoConfirmToggle = () => {
 
         {materialsData.length > 0 && (
           <div className="materials-list">
-            <h3>Materials for {selectedPartModel}:</h3>
-            <ul>
-              {materialsData.map((material) => (
-                <li key={material.part_matname}>
-                  {material.part_matname}: {material.sts_count}/{material.matt_count}
-                </li>
-              ))}
-            </ul>
+            <h3 onClick={() => setIsVisible(!isVisible)}>
+              Materials for {selectedPartModel}:
+            </h3>
+            {isVisible && (
+              <ul>
+                {materialsData.map((material) => (
+                  <li key={material.part_matname}>
+                    {material.part_matname}: {material.sts_count}/
+                    {material.matt_count}
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         )}
 
-        <button onClick={toggleCamera} className="toggle-camera-button">
+        <button onClick={toggleCamera} style={{ backgroundColor: "black", color: "white" }}>
           {isCameraActive ? "Hide Camera" : "Show Camera"}
         </button>
       </div>
       {isCameraActive && <div id="reader" className="reader"></div>}
       {showModal && (
-        <Modal isOpen={showModal} onRequestClose={closeModal} ariaHideApp={false}>
+        <Modal
+          isOpen={showModal}
+          onRequestClose={closeModal}
+          ariaHideApp={false}
+        >
           <div className="api-modal">
             {loading ? (
               <p>Loading data...</p>
@@ -310,7 +386,7 @@ const handleAutoConfirmToggle = () => {
               fetchedData && (
                 <div>
                   <p>Part ID: {fetchedData["partId"]}</p>
-                  <p>Part Model: {fetchedData["partmodel"]}</p>
+                  <p>Part Model (Project Name): {fetchedData["partmodel"]}</p>
                   <p>ชื่อเฟอร์นิเจอร์: {fetchedData["sub_assem"]}</p>
                   <p>ตำแหน่งชิ้นงาน: {fetchedData["description"]}</p>
                   <p>ความหนา: {fetchedData["part_thickness"]}</p>

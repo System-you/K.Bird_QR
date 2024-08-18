@@ -53,19 +53,20 @@ body, html {
     color: black;
   }
   
-  #html5-qrcode-button-camera-permission, #html5-qrcode-button-camera-stop, 
-  #html5-qrcode-button-camera-start, #html5-qrcode-button-scan-qr {
-    font-size: 14px; /* Adjust font size for better usability */
-    padding: 8px; /* Adjust padding for a better touch target */
-    color: white;
-    background-color: black;
-  }
-  
+  #html5-qrcode-button-camera-permission,
+  #html5-qrcode-button-camera-stop,
+  #html5-qrcode-button-camera-start,
+  #html5-qrcode-button-scan-qr {
+  font-size: 14px !important; /* Adjust font size for better usability */
+  padding: 8px !important; /* Adjust padding for a better touch target */
+  color: white !important;
+  background-color: black !important;
+}
   .toggle-camera-button {
     font-size: 14px; /* Adjust font size for better usability */
     padding: 8px; /* Adjust padding for a better touch target */
-    color: white;
-    background-color: black;
+    color: white !important;
+    background-color: black !important; 
   }
 
   #reader {
