@@ -196,29 +196,29 @@ const ScanQR = () => {
     setToastDisplayed(false);
   };
 
-  const handleConfirm = useCallback(async () => {
-    console.log('handleConfirm called');
-    console.log('fetchedData:', fetchedData);
+  const handleConfirm = useCallback(
+    async (data) => {
+      console.log("handleConfirm called");
+      console.log("fetchedData:", data);
 
-    if (!fetchedData) {
-      console.error('fetchedData is null or undefined inside handleConfirm');
-      toast.error('Error: Fetched data is invalid. Please try again.');
-      return; // Exit early if fetchedData is not set
-    }
+      if (!data) {
+        console.error("data is null or undefined inside handleConfirm");
+        toast.error("Error: Fetched data is invalid. Please try again.");
+        return; // Exit early if data is not set
+      }
 
-    if (scannedData && fetchedData) {
-     
+      if (scannedData && data) {
         try {
           await handlePostData(
-            fetchedData,
+            data,
             station,
             // selectedStatusRef.current,
             setLoading
           );
-          console.log('Data posted successfully');
+          console.log("Data posted successfully");
 
           if (!toastDisplayed) {
-            toast.success('อัพโหลดเรียบร้อย', { duration: 5000 });
+            toast.success("อัพโหลดเรียบร้อย", { duration: 5000 });
             setToastDisplayed(true);
           }
 
@@ -233,17 +233,19 @@ const ScanQR = () => {
 
           closeModal();
         } catch (error) {
-          toast.error('Error updating QR Code. Please try again.');
+          toast.error("Error updating QR Code. Please try again.");
         }
       } else {
-        toast.error('Error: Fetched data is invalid. Please try again.');
+        toast.error("Error: Fetched data is invalid. Please try again.");
       }
-  }, [fetchedData, scannedData, station, toastDisplayed]);
+    },
+    [scannedData, station, toastDisplayed]
+  );
 
   const onScanSuccess = useCallback(
     async (decodedText) => {
       setScannedData(decodedText);
-  
+
       try {
         await fetchData(
           decodedText,
@@ -258,17 +260,18 @@ const ScanQR = () => {
                 });
                 return;
               }
-  
+
               // Debugging log to check the fetched data
               console.log("Fetched data:", data);
               // Add a small delay to ensure setFetchedData is completed
               setTimeout(() => {
                 if (autoConfirmRef.current) {
-
                   if (data && data.partmodel === selectedPartModelRef.current) {
-                    handleConfirm(); // This now gets called with a set fetchedData
+                    handleConfirm(data); // This now gets called with a set fetchedData
                   } else {
-                    toast.error("Error: Fetched data is invalid. Please try again.");
+                    toast.error(
+                      "Error: Fetched data is invalid. Please try again."
+                    );
                   }
                 } else {
                   setShowModal(true);
@@ -362,20 +365,21 @@ const ScanQR = () => {
             <h3 onClick={() => setIsVisible(!isVisible)}>
               Materials for {selectedPartModel}:
             </h3>
-              <ul>
-                {materialsData.map((material) => (
-                  <li key={material.part_matname}>
-                    {material.part_matname}: {material.scan}/
-                    {material.count}/ {material.all_count > 0 && (
-                      <FontAwesomeIcon icon={faEye} />
-                    )}
-                  </li>
-                ))}
-              </ul>
+            <ul>
+              {materialsData.map((material) => (
+                <li key={material.part_matname}>
+                  {material.part_matname}: {material.scan}/{material.count}/{" "}
+                  {material.all_count > 0 && <FontAwesomeIcon icon={faEye} />}
+                </li>
+              ))}
+            </ul>
           </div>
         )}
 
-        <button onClick={toggleCamera} style={{ backgroundColor: "black", color: "white" }}>
+        <button
+          onClick={toggleCamera}
+          style={{ backgroundColor: "black", color: "white" }}
+        >
           {isCameraActive ? "Hide Camera" : "Show Camera"}
         </button>
       </div>
@@ -403,8 +407,18 @@ const ScanQR = () => {
                   <p>ความยาว: {fetchedData["part_length"]}</p>
                   <p>ชื่อวัสดุ: {fetchedData["part_matname"]}</p>
                   <div className="modal-buttons">
-                    <button onClick={handleConfirm} style={{backgroundColor:"black"}}>OK</button>
-                    <button onClick={closeModal} style={{backgroundColor:"black"}}>Cancel</button>
+                    <button
+                      onClick={handleConfirm}
+                      style={{ backgroundColor: "black" }}
+                    >
+                      OK
+                    </button>
+                    <button
+                      onClick={closeModal}
+                      style={{ backgroundColor: "black" }}
+                    >
+                      Cancel
+                    </button>
                   </div>
                 </div>
               )
