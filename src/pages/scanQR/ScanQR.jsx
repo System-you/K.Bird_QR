@@ -38,6 +38,11 @@ const ScanQR = () => {
   const autoConfirmRef = useRef(autoConfirm);
   // const selectedStatusRef = useRef(selectedStatus);
   const [isVisible, setIsVisible] = useState(false);
+  const [isIconVisible, setIsIconVisible] = useState(true);
+
+  const toggleIconVisibility = () => {
+    setIsIconVisible((prev) => !prev);
+  };
   selectedPartModelRef.current = selectedPartModel;
   autoConfirmRef.current = autoConfirm;
 
@@ -207,7 +212,7 @@ const ScanQR = () => {
         return; // Exit early if data is not set
       }
 
-      if (scannedData && data) {
+      if (data) {
         try {
           await handlePostData(
             data,
@@ -236,6 +241,7 @@ const ScanQR = () => {
           toast.error("Error updating QR Code. Please try again.");
         }
       } else {
+        console.error("Error: Scanned data is null or undefined.");
         toast.error("Error: Fetched data is invalid. Please try again.");
       }
     },
@@ -269,6 +275,7 @@ const ScanQR = () => {
                   if (data && data.partmodel === selectedPartModelRef.current) {
                     handleConfirm(data); // This now gets called with a set fetchedData
                   } else {
+                    console.error("Error: Fetched data is null or undefined.");
                     toast.error(
                       "Error: Fetched data is invalid. Please try again."
                     );
@@ -278,6 +285,7 @@ const ScanQR = () => {
                 }
               }, 100); // Adjust the delay as needed, 100ms is just an example
             } else {
+              console.error("Error: Fetched data is null or undefined.");
               toast.error("Error: Fetched data is invalid. Please try again.");
             }
           },
