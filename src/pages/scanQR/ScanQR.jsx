@@ -10,7 +10,8 @@ import {
   fetchData,
   handlePostData,
 } from "../../database/fetchData";
-
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faEye } from "@fortawesome/free-solid-svg-icons";
 const ScanQR = () => {
   const navigate = useNavigate();
 
@@ -23,7 +24,7 @@ const ScanQR = () => {
   const [error, setError] = useState(null);
   const [scannedData, setScannedData] = useState(null);
   const [showModal, setShowModal] = useState(false);
-  const [selectedStatus, setSelectedStatus] = useState("");
+  // const [selectedStatus, setSelectedStatus] = useState("");
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [autoConfirm, setAutoConfirm] = useState(false);
   const [toastDisplayed, setToastDisplayed] = useState(false);
@@ -35,14 +36,14 @@ const ScanQR = () => {
 
   const selectedPartModelRef = useRef(selectedPartModel);
   const autoConfirmRef = useRef(autoConfirm);
-  const selectedStatusRef = useRef(selectedStatus);
+  // const selectedStatusRef = useRef(selectedStatus);
   const [isVisible, setIsVisible] = useState(false);
   selectedPartModelRef.current = selectedPartModel;
   autoConfirmRef.current = autoConfirm;
 
-  useEffect(() => {
-    selectedStatusRef.current = selectedStatus;
-  }, [selectedStatus]);
+  // useEffect(() => {
+  //   selectedStatusRef.current = selectedStatus;
+  // }, [selectedStatus]);
 
   let htmlScanner = null;
 
@@ -158,12 +159,12 @@ const ScanQR = () => {
   };
 
   const toggleCamera = () => {
-    if (selectedStatus && validatePartModel()) {
+    if (validatePartModel()) {
       setIsCameraActive((prev) => !prev);
     } else {
-      if (!selectedStatus) {
-        toast.error("Please select a status before activating the camera.");
-      }
+      // if (!selectedStatus) {
+      //   toast.error("Please select a status before activating the camera.");
+      // }
       if (!validatePartModel()) {
         toast.error(
           "Please select a valid part model before activating the camera."
@@ -196,26 +197,28 @@ const ScanQR = () => {
   };
 
   const handleConfirm = useCallback(async () => {
+    console.log('handleConfirm called');
+    console.log('fetchedData:', fetchedData);
+
     if (!fetchedData) {
-      console.error("fetchedData is null or undefined inside handleConfirm");
-      toast.error("Error: Fetched data is invalid. Please try again.");
+      console.error('fetchedData is null or undefined inside handleConfirm');
+      toast.error('Error: Fetched data is invalid. Please try again.');
       return; // Exit early if fetchedData is not set
     }
 
     if (scannedData && fetchedData) {
-      if (fetchedData["sts_count"] < fetchedData["matt_count"]) {
+     
         try {
           await handlePostData(
             fetchedData,
             station,
-            username,
-            selectedStatusRef.current,
+            // selectedStatusRef.current,
             setLoading
           );
-          console.log("Data posted successfully");
+          console.log('Data posted successfully');
 
           if (!toastDisplayed) {
-            toast.success("อัพโหลดเรียบร้อย", { duration: 5000 });
+            toast.success('อัพโหลดเรียบร้อย', { duration: 5000 });
             setToastDisplayed(true);
           }
 
@@ -230,21 +233,17 @@ const ScanQR = () => {
 
           closeModal();
         } catch (error) {
-          toast.error("Error updating QR Code. Please try again.");
+          toast.error('Error updating QR Code. Please try again.');
         }
       } else {
-        toast.error("ไม่สามารถแสกนได้ เนื่องจากได้แสกนไปแล้วทั้งหมด");
+        toast.error('Error: Fetched data is invalid. Please try again.');
       }
-    } else {
-      toast.error("Error: Fetched data is invalid. Please try again.");
-    }
-  }, [fetchedData, scannedData, station, username, toastDisplayed]);
+  }, [fetchedData, scannedData, station, toastDisplayed]);
 
   const onScanSuccess = useCallback(
     async (decodedText) => {
       setScannedData(decodedText);
-      // console.log(`Scanned QR Code: ${decodedText}`);
-
+  
       try {
         await fetchData(
           decodedText,
@@ -254,17 +253,27 @@ const ScanQR = () => {
             if (data) {
               setFetchedData(data); // Ensure this is set
               if (data.partmodel !== selectedPartModelRef.current) {
-                toast.error("part model ไม่ตรงกับที่เลือกไว้ โปรดแสกนใหม่", {
+                toast.error("Part model ไม่ตรงกับที่เลือกไว้ โปรดแสกนใหม่", {
                   duration: 5000,
                 });
                 return;
               }
+  
+              // Debugging log to check the fetched data
+              console.log("Fetched data:", data);
+              // Add a small delay to ensure setFetchedData is completed
+              setTimeout(() => {
+                if (autoConfirmRef.current) {
 
-              if (autoConfirmRef.current) {
-                await handleConfirm();
-              } else {
-                setShowModal(true);
-              }
+                  if (data && data.partmodel === selectedPartModelRef.current) {
+                    handleConfirm(); // This now gets called with a set fetchedData
+                  } else {
+                    toast.error("Error: Fetched data is invalid. Please try again.");
+                  }
+                } else {
+                  setShowModal(true);
+                }
+              }, 100); // Adjust the delay as needed, 100ms is just an example
             } else {
               toast.error("Error: Fetched data is invalid. Please try again.");
             }
@@ -333,7 +342,7 @@ const ScanQR = () => {
             </ul>
           )}
         </label>
-        <label className="form-label">
+        {/* <label className="form-label">
           Select Status:
           <select
             value={selectedStatus}
@@ -346,23 +355,23 @@ const ScanQR = () => {
             <option value="C">C-รับชิ้นงานแล้ว</option>
             <option value="D">D-ส่งแล้ว</option>
           </select>
-        </label>
+        </label> */}
 
         {materialsData.length > 0 && (
           <div className="materials-list">
             <h3 onClick={() => setIsVisible(!isVisible)}>
               Materials for {selectedPartModel}:
             </h3>
-            {isVisible && (
               <ul>
                 {materialsData.map((material) => (
                   <li key={material.part_matname}>
-                    {material.part_matname}: {material.sts_count}/
-                    {material.matt_count}
+                    {material.part_matname}: {material.scan}/
+                    {material.count}/ {material.all_count > 0 && (
+                      <FontAwesomeIcon icon={faEye} />
+                    )}
                   </li>
                 ))}
               </ul>
-            )}
           </div>
         )}
 
@@ -393,13 +402,9 @@ const ScanQR = () => {
                   <p>ความกว้าง: {fetchedData["part_width"]}</p>
                   <p>ความยาว: {fetchedData["part_length"]}</p>
                   <p>ชื่อวัสดุ: {fetchedData["part_matname"]}</p>
-                  <p>สถานะ: {fetchedData["sts_name"]}</p>
-                  <p>Inventory ทั้งหมด : {fetchedData["matt_count"]}</p>
-                  <p>แสกนไปแล้ว : {fetchedData["sts_count"]}</p>
-                  <p>New Status: {selectedStatus}</p>
                   <div className="modal-buttons">
-                    <button onClick={handleConfirm}>OK</button>
-                    <button onClick={closeModal}>Cancel</button>
+                    <button onClick={handleConfirm} style={{backgroundColor:"black"}}>OK</button>
+                    <button onClick={closeModal} style={{backgroundColor:"black"}}>Cancel</button>
                   </div>
                 </div>
               )

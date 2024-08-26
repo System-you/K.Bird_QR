@@ -62,6 +62,9 @@ body, html {
   color: white !important;
   background-color: black !important;
 }
+
+
+
   .toggle-camera-button {
     font-size: 14px; /* Adjust font size for better usability */
     padding: 8px; /* Adjust padding for a better touch target */

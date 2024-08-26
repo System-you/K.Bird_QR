@@ -42,6 +42,13 @@ button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
+
+.html5-qrcode-element{
+  font-size: 14px !important; /* Adjust font size for better usability */
+  padding: 8px !important; /* Adjust padding for a better touch target */
+  color: white !important;
+  background-color: black !important;
+}
 @media (prefers-color-scheme: light) {
 
   a:hover {

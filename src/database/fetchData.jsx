@@ -46,10 +46,10 @@ export const fetchData = debounce(async (qrCode, station, setLoading, setFetched
   }
 }, 1000);
 
-export const handlePostData = async (fetchedData, station, username, selectedStatus, setLoading) => {
+export const handlePostData = async (fetchedData, station, setLoading) => {
   try {
     setLoading(true);
-    const url = `${API_URL}/qr-code?partmodel=${fetchedData.partmodel}&partId=${fetchedData.partId}&station=${station}&empName=${username}&status=${selectedStatus}`;
+    const url = `${API_URL}/driver?partModel=${fetchedData.partmodel}&station=${station}&partId=${fetchedData.partId}`;
 
     const response = await fetch(url, {
       method: "PATCH",
@@ -117,7 +117,7 @@ export const fetchPartModel = async (setLoading, setFetchedData, setError) => {
 
 export const fetchPartModelMaterials = async (partModel, station, setLoading, setMaterialsData, setError) => {
   const timestamp = new Date().getTime();
-  const url = `${API_URL}/part-model/materials?partmodel=${partModel}&station=${station}&t=${timestamp}`;
+  const url = `${API_URL}/driver?partModel=${partModel}&station=${station}&t=${timestamp}`;
   try {
     setLoading(true);
     const response = await fetch(url, {
