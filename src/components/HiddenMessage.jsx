@@ -13,6 +13,8 @@ const HiddenMessage = ({ message }) => {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
+        backgroundColor: "white",
+        color: 'black'
       }}
     >
       {message}
