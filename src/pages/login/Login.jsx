@@ -21,7 +21,7 @@ const Login = () => {
       if (!apiKey) {
         throw new Error("API key is missing");
       }
-      if (!username || !password || !station) {
+      if (!username || !password ) {
         throw new Error("Please fill in all fields");
       }
       
@@ -55,7 +55,7 @@ const Login = () => {
           setStation(station);
 
           // Save station and username to localStorage
-          localStorage.setItem("station", station);
+          localStorage.setItem("station", 10);
           localStorage.setItem("username", username);
 
           // Navigate to /scanQR on successful login
@@ -83,7 +83,7 @@ const Login = () => {
           <input
             type="text"
             value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            onChange={(e) => setUsername(e.target.value.toLowerCase())}
             className="form-input"
           />
         </label>
@@ -93,15 +93,6 @@ const Login = () => {
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="form-input"
-          />
-        </label>
-        <label className="form-label">
-          Station:
-          <input
-            type="text"
-            value={station}
-            onChange={(e) => setStation(e.target.value)}
             className="form-input"
           />
         </label>

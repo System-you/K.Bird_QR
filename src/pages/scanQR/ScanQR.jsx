@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Html5QrcodeScanner } from "html5-qrcode";
 import Modal from "react-modal";
 import toast, { Toaster } from "react-hot-toast";
+import { Howl } from 'howler';
 import "./ScanQR.css";
 import {
   fetchPartModel,
@@ -10,21 +11,19 @@ import {
   fetchData,
   handlePostData,
 } from "../../database/fetchData";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faEye } from "@fortawesome/free-solid-svg-icons";
+
 const ScanQR = () => {
   const navigate = useNavigate();
 
   const [username, setUsername] = useState(
     localStorage.getItem("username") || ""
   );
-  const [station, setStation] = useState(localStorage.getItem("station") || "");
+  const station = "10"; // Station is fixed as 10
   const [fetchedData, setFetchedData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [scannedData, setScannedData] = useState(null);
   const [showModal, setShowModal] = useState(false);
-  // const [selectedStatus, setSelectedStatus] = useState("");
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [autoConfirm, setAutoConfirm] = useState(false);
   const [toastDisplayed, setToastDisplayed] = useState(false);
@@ -33,28 +32,29 @@ const ScanQR = () => {
   const [filteredModels, setFilteredModels] = useState([]);
   const [selectedPartModel, setSelectedPartModel] = useState("");
   const [materialsData, setMaterialsData] = useState([]);
+  const [isVisible, setIsVisible] = useState(false); // Single visibility state for all materials
 
   const selectedPartModelRef = useRef(selectedPartModel);
   const autoConfirmRef = useRef(autoConfirm);
-  // const selectedStatusRef = useRef(selectedStatus);
-  const [isVisible, setIsVisible] = useState(false);
-  const [isIconVisible, setIsIconVisible] = useState(true);
 
-  const toggleIconVisibility = () => {
-    setIsIconVisible((prev) => !prev);
-  };
   selectedPartModelRef.current = selectedPartModel;
   autoConfirmRef.current = autoConfirm;
 
-  // useEffect(() => {
-  //   selectedStatusRef.current = selectedStatus;
-  // }, [selectedStatus]);
+  const fetchedDataRef = useRef(null);
+  useEffect(() => {
+    fetchedDataRef.current = fetchedData;
+  }, [fetchedData]);
+
+  const successSound = new Howl({
+    src: ['/system-notification-199277.mp3'], // Replace with the path to your sound file
+    volume: 1.0,
+  });
 
   let htmlScanner = null;
 
   useEffect(() => {
-    if (!username || !station) {
-      toast.error("Username and station are required. Please log in again.");
+    if (!username) {
+      toast.error("Username is required. Please log in again.");
       navigate("/login");
     }
 
@@ -70,7 +70,7 @@ const ScanQR = () => {
     return () => {
       window.removeEventListener("popstate", handleBackButton);
     };
-  }, [username, station, navigate]);
+  }, [username, navigate]);
 
   useEffect(() => {
     const loadPartModels = async () => {
@@ -82,7 +82,7 @@ const ScanQR = () => {
 
   const loadPartMaterials = useCallback(
     async (model) => {
-      if (model && station) {
+      if (model) {
         await fetchPartModelMaterials(
           model,
           station,
@@ -143,7 +143,6 @@ const ScanQR = () => {
       return;
     });
 
-    // Apply custom styles after the scanner is initialized
     setTimeout(() => {
       const buttons = [
         document.querySelector("#html5-qrcode-button-camera-permission"),
@@ -160,16 +159,13 @@ const ScanQR = () => {
           button.style.backgroundColor = "black";
         }
       });
-    }, 500); // Delay to ensure buttons are rendered
+    }, 500);
   };
 
   const toggleCamera = () => {
     if (validatePartModel()) {
       setIsCameraActive((prev) => !prev);
     } else {
-      // if (!selectedStatus) {
-      //   toast.error("Please select a status before activating the camera.");
-      // }
       if (!validatePartModel()) {
         toast.error(
           "Please select a valid part model before activating the camera."
@@ -202,56 +198,61 @@ const ScanQR = () => {
   };
 
   const handleConfirm = useCallback(
-    async (data) => {
+    async () => {
       console.log("handleConfirm called");
-      console.log("fetchedData:", data);
-
+  
+      const data = fetchedDataRef.current;
+  
       if (!data) {
-        console.error("data is null or undefined inside handleConfirm");
+        console.error("fetchedData is null or undefined inside handleConfirm");
         toast.error("Error: Fetched data is invalid. Please try again.");
-        return; // Exit early if data is not set
+        return;
       }
-
-      if (data) {
-        try {
-          await handlePostData(
-            data,
-            station,
-            // selectedStatusRef.current,
-            setLoading
-          );
-          console.log("Data posted successfully");
-
-          if (!toastDisplayed) {
-            toast.success("อัพโหลดเรียบร้อย", { duration: 5000 });
-            setToastDisplayed(true);
-          }
-
-          // Refresh the materials data after successful confirmation
-          await fetchPartModelMaterials(
-            selectedPartModelRef.current,
-            station,
-            setLoading,
-            setMaterialsData,
-            setError
-          );
-
-          closeModal();
-        } catch (error) {
-          toast.error("Error updating QR Code. Please try again.");
+  
+      try {
+        const partModel = selectedPartModelRef.current;
+        const partId = data.partId;
+  
+        if (!partModel || !partId) {
+          console.error("partModel or partId is undefined");
+          toast.error("Error: Part model or part ID is missing. Please try again.");
+          return;
         }
-      } else {
-        console.error("Error: Scanned data is null or undefined.");
-        toast.error("Error: Fetched data is invalid. Please try again.");
+  
+        console.log("partModel:", partModel);
+        console.log("partId:", partId);
+  
+        await handlePostData(
+          data,
+          station,
+          setLoading
+        );
+        console.log("Data posted successfully");
+  
+        if (!toastDisplayed) {
+          // Play success sound
+          successSound.play();
+          setToastDisplayed(true);
+        }
+  
+        await fetchPartModelMaterials(
+          partModel,
+          station,
+          setLoading,
+          setMaterialsData,
+          setError
+        );
+  
+        closeModal();
+      } catch (error) {
+        console.error("Error posting data:", error);
       }
     },
-    [scannedData, station, toastDisplayed]
+    [station, toastDisplayed]
   );
-
+  
   const onScanSuccess = useCallback(
     async (decodedText) => {
-      setScannedData(decodedText);
-
       try {
         await fetchData(
           decodedText,
@@ -259,31 +260,20 @@ const ScanQR = () => {
           setLoading,
           async (data) => {
             if (data) {
-              setFetchedData(data); // Ensure this is set
+              setFetchedData(data);
+              fetchedDataRef.current = data;
               if (data.partmodel !== selectedPartModelRef.current) {
                 toast.error("Part model ไม่ตรงกับที่เลือกไว้ โปรดแสกนใหม่", {
                   duration: 5000,
                 });
                 return;
               }
-
-              // Debugging log to check the fetched data
-              console.log("Fetched data:", data);
-              // Add a small delay to ensure setFetchedData is completed
-              setTimeout(() => {
-                if (autoConfirmRef.current) {
-                  if (data && data.partmodel === selectedPartModelRef.current) {
-                    handleConfirm(data); // This now gets called with a set fetchedData
-                  } else {
-                    console.error("Error: Fetched data is null or undefined.");
-                    toast.error(
-                      "Error: Fetched data is invalid. Please try again."
-                    );
-                  }
-                } else {
-                  setShowModal(true);
-                }
-              }, 100); // Adjust the delay as needed, 100ms is just an example
+  
+              if (autoConfirmRef.current) {
+                handleConfirm();
+              } else {
+                setShowModal(true);
+              }
             } else {
               console.error("Error: Fetched data is null or undefined.");
               toast.error("Error: Fetched data is invalid. Please try again.");
@@ -301,7 +291,6 @@ const ScanQR = () => {
 
   const handleLogout = () => {
     localStorage.removeItem("username");
-    localStorage.removeItem("station");
     navigate("/login");
   };
 
@@ -315,12 +304,6 @@ const ScanQR = () => {
   return (
     <div className="container">
       <div className="form-container">
-        <button
-          onClick={handleLogout}
-          style={{ color: "white", backgroundColor: "black" }}
-        >
-          Logout
-        </button>
         <label className="form-label">
           <input
             type="checkbox"
@@ -353,31 +336,23 @@ const ScanQR = () => {
             </ul>
           )}
         </label>
-        {/* <label className="form-label">
-          Select Status:
-          <select
-            value={selectedStatus}
-            onChange={(e) => setSelectedStatus(e.target.value)}
-            className="form-input"
-          >
-            <option value="">Select...</option>
-            <option value="A">A-สำเร็จ</option>
-            <option value="B">B-เสีย</option>
-            <option value="C">C-รับชิ้นงานแล้ว</option>
-            <option value="D">D-ส่งแล้ว</option>
-          </select>
-        </label> */}
 
         {materialsData.length > 0 && (
           <div className="materials-list">
-            <h3 onClick={() => setIsVisible(!isVisible)}>
+            <h3>
               Materials for {selectedPartModel}:
+              <span 
+                onClick={() => setIsVisible(!isVisible)}
+                style={{ cursor: 'pointer', marginLeft: '10px' }}
+              >
+                {isVisible ? "🔓" : "🔒"} {/* You can replace with icons if needed */}
+              </span>
             </h3>
             <ul>
               {materialsData.map((material) => (
                 <li key={material.part_matname}>
-                  {material.part_matname}: {material.scan}/{material.count}/{" "}
-                  {material.all_count > 0 && <FontAwesomeIcon icon={faEye} />}
+                  {material.part_matname}: {material.scan}/{material.count}/
+                  {isVisible && <span>{String(material.all_count)}</span>}
                 </li>
               ))}
             </ul>
@@ -390,8 +365,17 @@ const ScanQR = () => {
         >
           {isCameraActive ? "Hide Camera" : "Show Camera"}
         </button>
+
+        <button
+          onClick={handleLogout}
+          style={{ color: "white", backgroundColor: "black", marginTop: "20px", marginLeft: "auto" }}
+        >
+          Logout
+        </button>
       </div>
+
       {isCameraActive && <div id="reader" className="reader"></div>}
+
       {showModal && (
         <Modal
           isOpen={showModal}
@@ -434,6 +418,7 @@ const ScanQR = () => {
           </div>
         </Modal>
       )}
+
       <Toaster position="top-right" reverseOrder={false} />
     </div>
   );

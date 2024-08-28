@@ -46,10 +46,10 @@ export const fetchData = debounce(async (qrCode, station, setLoading, setFetched
   }
 }, 1000);
 
-export const handlePostData = async (fetchedData, station, setLoading) => {
+export const handlePostData = async (data, station, setLoading) => {
   try {
     setLoading(true);
-    const url = `${API_URL}/driver?partModel=${fetchedData.partmodel}&station=${station}&partId=${fetchedData.partId}`;
+    const url = `${API_URL}/driver?partModel=${data.partmodel}&station=${station}&partId=${data.partId}`;
 
     const response = await fetch(url, {
       method: "PATCH",
@@ -61,6 +61,9 @@ export const handlePostData = async (fetchedData, station, setLoading) => {
     });
 
     if (!response.ok) {
+      if (response.status === 500) {
+        toast.error('{"message":"เกิดข้อผิดพลาดระหว่างการสแกน QR Code สำหรับคนขับ"}');
+      }
       throw new Error(`HTTP error! Status: ${response.status}`);
     }
 
