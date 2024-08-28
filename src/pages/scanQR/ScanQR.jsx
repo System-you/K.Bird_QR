@@ -33,6 +33,9 @@ const ScanQR = () => {
   const [selectedPartModel, setSelectedPartModel] = useState("");
   const [materialsData, setMaterialsData] = useState([]);
   const [isVisible, setIsVisible] = useState(false); // Single visibility state for all materials
+  const totalScan = materialsData.reduce((acc, material) => acc + material.scan, 0);
+  const totalCount = materialsData.reduce((acc, material) => acc + material.count, 0);
+  const totalAllCount = materialsData.reduce((acc, material) => acc + material.all_count, 0);
 
   const selectedPartModelRef = useRef(selectedPartModel);
   const autoConfirmRef = useRef(autoConfirm);
@@ -338,7 +341,7 @@ const ScanQR = () => {
         </label>
 
         {materialsData.length > 0 && (
-          <div className="materials-list">
+          <div className="materials-list" style={{paddingBottom:"20px"}}>
             <h3>
               Materials for {selectedPartModel}:
               <span 
@@ -348,14 +351,32 @@ const ScanQR = () => {
                 {isVisible ? "🔓" : "🔒"} {/* You can replace with icons if needed */}
               </span>
             </h3>
-            <ul>
-              {materialsData.map((material) => (
-                <li key={material.part_matname}>
-                  {material.part_matname}: {material.scan}/{material.count}/
-                  {isVisible && <span>{String(material.all_count)}</span>}
-                </li>
-              ))}
-            </ul>
+            <table>
+              <thead>
+                <tr>
+                  <th>Material Name</th>
+                  <th></th>
+                  <th></th>
+                  {isVisible && <th>All Count</th>}
+                </tr>
+              </thead>
+              <tbody>
+                {materialsData.map((material) => (
+                  <tr key={material.part_matname}>
+                    <td style={{paddingRight:"10px"}}>{material.part_matname}</td>
+                    <td style={{paddingRight:"50px"}}>{material.scan}</td>
+                    <td style={{paddingRight:"50px"}}>{material.count}</td>
+                    {isVisible && <td>{material.all_count}</td>}
+                  </tr>
+                ))}
+                <tr>
+                  <td><strong>Total</strong></td>
+                  <td><strong>{totalScan}</strong></td>
+                  <td><strong>{totalCount}</strong></td>
+                  {isVisible && <td><strong>{totalAllCount}</strong></td>}
+                </tr>
+              </tbody>
+            </table>
           </div>
         )}
 
