@@ -41,6 +41,7 @@ body, html {
     width: 100%; /* Ensure form uses full width */
     flex-direction: column; /* Stack form elements vertically */
     gap: 10px; /* Adjust gap between form elements */
+    overflow-y: auto;
   }
 
   .form-label {
@@ -114,3 +115,4 @@ body, html {
   box-sizing: border-box; /* Ensure padding is included in the element's total width and height */
   overflow-y: auto; /* Allow vertical scrolling */
 }
+

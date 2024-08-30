@@ -355,25 +355,25 @@ const ScanQR = () => {
               <thead>
                 <tr>
                   <th>Material Name</th>
-                  <th></th>
-                  <th></th>
-                  {isVisible && <th>All Count</th>}
+                  <th style={{ textAlign: "right" }}></th>
+                  <th style={{ textAlign: "right" }}></th>
+                  {isVisible && <th style={{ textAlign: "right" }}>All </th>}
                 </tr>
               </thead>
               <tbody>
                 {materialsData.map((material) => (
-                  <tr key={material.part_matname}>
-                    <td style={{paddingRight:"10px"}}>{material.part_matname}</td>
-                    <td style={{paddingRight:"50px"}}>{material.scan}</td>
-                    <td style={{paddingRight:"50px"}}>{material.count}</td>
-                    {isVisible && <td>{material.all_count}</td>}
+                  <tr key={material.part_matname} >
+                    <td >{material.part_matname}</td>
+                    <td style={{  textAlign: "right" ,paddingRight:"10px" ,paddingLeft:"110px"}}>{material.scan}</td>
+                    <td style={{textAlign: "right",paddingRight:"10px" }}>{material.count}</td>
+                    {isVisible && <td style={{ textAlign: "right" }}>{material.all_count}</td>}
                   </tr>
                 ))}
                 <tr>
                   <td><strong>Total</strong></td>
-                  <td><strong>{totalScan}</strong></td>
-                  <td><strong>{totalCount}</strong></td>
-                  {isVisible && <td><strong>{totalAllCount}</strong></td>}
+                  <td style={{ textAlign: "right",paddingRight:"10px" }}><strong>{totalScan}</strong></td>
+                  <td style={{ textAlign: "right" ,paddingRight:"10px"}}><strong>{totalCount}</strong></td>
+                  {isVisible && <td style={{ textAlign: "right" }}><strong>{totalAllCount}</strong></td>}
                 </tr>
               </tbody>
             </table>
