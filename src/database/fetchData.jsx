@@ -61,10 +61,11 @@ export const handlePostData = async (data, station, setLoading) => {
     });
 
     if (!response.ok) {
-      if (response.status === 500) {
-        toast.error('{"message":"เกิดข้อผิดพลาดระหว่างการสแกน QR Code สำหรับคนขับ"}');
+      if (!response.ok) {
+        const errorResult = await response.json();
+        toast.error(errorResult.message || "เกิดข้อผิดพลาดระหว่างการสแกน QR Code สำหรับคนขับ 555");
+        throw new Error(`HTTP error! Status: ${response.status}`);
       }
-      throw new Error(`HTTP error! Status: ${response.status}`);
     }
 
     const result = await response.json();
