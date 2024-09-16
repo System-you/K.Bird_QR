@@ -118,9 +118,9 @@ export const fetchPartModel = async (setLoading, setFetchedData, setError) => {
 };
 
 
-export const fetchPartModelMaterials = async (partModel, station, setLoading, setMaterialsData, setError) => {
+export const fetchPartModelMaterials = async (partModel, setLoading, setMaterialsData, setError) => {
   const timestamp = new Date().getTime();
-  const url = `${API_URL}/driver?partModel=${partModel}&station=${station}&t=${timestamp}`;
+  const url = `${API_URL}/driver?partModel=${partModel}&station=9&t=${timestamp}`;
   try {
     setLoading(true);
     const response = await fetch(url, {

@@ -88,7 +88,6 @@ const ScanQR = () => {
       if (model) {
         await fetchPartModelMaterials(
           model,
-          station,
           setLoading,
           setMaterialsData,
           setError
@@ -240,7 +239,6 @@ const ScanQR = () => {
   
         await fetchPartModelMaterials(
           partModel,
-          station,
           setLoading,
           setMaterialsData,
           setError
