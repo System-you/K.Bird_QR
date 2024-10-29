@@ -70,7 +70,6 @@ export const handlePostData = async (data, station, setLoading) => {
 
     const result = await response.json();
     toast.success(result.message || "อัพโหลดเรียบร้อย");
-
   } catch (error) {
     console.error("Error in handlePostData:", error.message);
     throw error;

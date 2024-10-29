@@ -8,7 +8,6 @@ const App = () => {
   return (
     <Router>
       <Routes>
-        
         <Route path="/login" element={<Login />} />
         <Route path="/scanQR" element={<ScanQR />} />
         <Route path="/" element={<Navigate to="/login" />} />
