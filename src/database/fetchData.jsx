@@ -18,7 +18,7 @@ export const fetchData = debounce(async (qrCode, station, setLoading, setFetched
 
     const timestamp = new Date().getTime();
     const url = `${API_URL}/qr-code?station=${station}&qrCode=${qrCode}&t=${timestamp}`;
-    
+
     const response = await fetch(url, {
       method: "GET",
       headers: {
