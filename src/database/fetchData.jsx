@@ -1,16 +1,12 @@
 import toast from "react-hot-toast";
-import { debounce } from 'lodash';
-
 
 const API_URL = import.meta.env.VITE_REACT_APP_API_URL;
 const apiKey = import.meta.env.VITE_REACT_APP_API_KEY;
 
-
-export const fetchData = debounce(async (qrCode, station, setLoading, setFetchedData, setError, closeModal) => {
-  setLoading(true);
+export const fetchData = async (qrCode, station, onScanFinished, closeModal) => {
   try {
-    if (!apiKey) {
-      throw new Error("API key is missing");
+    if (!apiKey || !API_URL) {
+      throw new Error("API configuration is missing");
     }
     if (!qrCode || !station) {
       throw new Error("Please fill in all fields");
@@ -34,21 +30,21 @@ export const fetchData = debounce(async (qrCode, station, setLoading, setFetched
 
     const responseData = await response.json();
 
-    setFetchedData(responseData.data);
+    if (responseData?.data) {
+      await onScanFinished(responseData.data);
+    } else {
+      throw new Error("Invalid data received");
+    }
 
   } catch (error) {
     console.error("Error fetching data:", error);
-    setError(error.message);
-    toast.error(`Please scan the QR code again`);
+    toast.error(`Error: ${error.message || "Please scan the QR code again"}`);
     closeModal();
-  } finally {
-    setLoading(false);
   }
-}, 1000);
+};
 
-export const handlePostData = async (data, station, setLoading) => {
+export const handlePostData = async (data, station) => {
   try {
-    setLoading(true);
     const url = `${API_URL}/driver?partModel=${data.partmodel}&station=${station}&partId=${data.partId}`;
 
     const response = await fetch(url, {
@@ -73,15 +69,12 @@ export const handlePostData = async (data, station, setLoading) => {
   } catch (error) {
     console.error("Error in handlePostData:", error.message);
     throw error;
-  } finally {
-    setLoading(false);
   }
 };
 
-export const fetchPartModel = async (setLoading, setFetchedData, setError) => {
+export const fetchPartModel = async (setFetchedData) => {
   const url = `${API_URL}/part-model`;
   try {
-    setLoading(true);
     const response = await fetch(url, {
       method: "GET",
       headers: {
@@ -109,20 +102,14 @@ export const fetchPartModel = async (setLoading, setFetchedData, setError) => {
       throw new Error("Data format is incorrect. Expected an array.");
     }
   } catch (error) {
-    // console.error("Error fetching part model:", error);
-    setError(error.message);
     toast.error("Failed to fetch part model data");
-  } finally {
-    setLoading(false);
   }
 };
 
-
-export const fetchPartModelMaterials = async (partModel, setLoading, setMaterialsData, setError) => {
+export const fetchPartModelMaterials = async (partModel, setMaterialsData) => {
   const timestamp = new Date().getTime();
   const url = `${API_URL}/driver?partModel=${partModel}&station=9&t=${timestamp}`;
   try {
-    setLoading(true);
     const response = await fetch(url, {
       method: "GET",
       headers: {
@@ -141,10 +128,6 @@ export const fetchPartModelMaterials = async (partModel, setLoading, setMaterial
     setMaterialsData(data.data || []);
 
   } catch (error) {
-    // console.error("Error fetching part model materials:", error);
-    setError(error.message);
     toast.error("Failed to fetch part model materials");
-  } finally {
-    setLoading(false);
   }
 };
