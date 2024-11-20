@@ -1,0 +1,99 @@
+body {
+  margin: 0;
+  display: flex;
+  place-items: center;
+  width: 100%; /* Change from 100vw to 100% */
+  height: 100%; /* Change from 100vh to 100% */
+  background-color: white;
+  overflow-y: auto; /* Allow vertical scrolling */
+}
+
+* {
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
+#root {
+  width: 100%; /* Change from 100vw to 100% */
+  height: 100%; /* Change from 100vh to 100% */
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: white;
+}
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
+}
+
+.popup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: white;
+  padding: 20px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  border-radius: 8px;
+  width: 90%; /* Adjust to ensure it fits within smaller screens */
+  max-width: 300px;
+  text-align: center;
+  box-sizing: border-box; /* Ensure padding is included in width calculation */
+}
+
+.popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw; /* Ensure it covers the entire viewport */
+  height: 100vh; /* Ensure it covers the entire viewport */
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+}
+
+.close-btn {
+  margin-top: 20px;
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
