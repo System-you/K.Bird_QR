@@ -1,3 +1,4 @@
+/* eslint-disable no-useless-catch */
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
@@ -53,6 +54,8 @@ const Login = () => {
 
           setUserData(data.data);
           setStation(station);
+          console.log( data );
+          console.log( username);
 
           // Save station and username to localStorage
           localStorage.setItem("station", 10);
