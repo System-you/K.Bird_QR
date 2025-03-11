@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Route, Routes, Navigate } from "react-router-d
 import Login from "./pages/login/Login.jsx";
 import ScanQR from "./pages/scanQR/ScanQR.jsx";
 import "./App.css";
-
+// FOR TEST 
 const App = () => {
   return (
     <Router>
