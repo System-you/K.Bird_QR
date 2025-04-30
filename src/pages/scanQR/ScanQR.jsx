@@ -1,20 +1,19 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import { Html5QrcodeScanner } from "html5-qrcode";
 import Modal from "react-modal";
 import toast, { Toaster } from "react-hot-toast";
-import { Howl } from 'howler';
+import { Howl } from "howler";
 import "./ScanQR.css";
 import {
   fetchPartModel,
   fetchPartModelMaterials,
   fetchData,
   handlePostData,
+  fetchListLastPrintData,
 } from "../../database/fetchData";
 
 const ScanQR = () => {
-  const [username] = useState(
-    localStorage.getItem("username") || ""
-  );
+  const [username] = useState(localStorage.getItem("username") || "");
   const station = "10";
   const [fetchedData, setFetchedData] = useState(null);
   const [showModal, setShowModal] = useState(false);
@@ -22,25 +21,35 @@ const ScanQR = () => {
   const [autoConfirm, setAutoConfirm] = useState(false);
   const [partModels, setPartModels] = useState([]);
   const [filteredModels, setFilteredModels] = useState([]);
+  const [listLastPrintData, setListLastPrintData] = useState([]);
+  console.log(listLastPrintData);
+  const [showlistLastPrint, setShowlistLastPrint] = useState(false);
   const [selectedPartModel, setSelectedPartModel] = useState("");
+  const [selectedPrint, setSelectedPrint] = useState("");
   const [materialsData, setMaterialsData] = useState([]);
   const [isVisible, setIsVisible] = useState(false);
-  const totalScan = materialsData.reduce((acc, material) => acc + material.scan, 0);
-  const totalCount = materialsData.reduce((acc, material) => acc + material.count, 0);
-  const totalAllCount = materialsData.reduce((acc, material) => acc + material.all_count, 0);
+  const totalScan = materialsData.reduce(
+    (acc, material) => acc + material.scan,
+    0
+  );
+  const totalCount = materialsData.reduce(
+    (acc, material) => acc + material.count,
+    0
+  );
+  const totalAllCount = materialsData.reduce(
+    (acc, material) => acc + material.all_count,
+    0
+  );
 
   const successSound = new Howl({
-    src: ['/system-notification-199277.mp3'],
+    src: ["/system-notification-199277.mp3"],
     volume: 1.0,
   });
   let htmlScanner = null;
 
   const loadPartMaterials = async (model) => {
     if (model) {
-      await fetchPartModelMaterials(
-        model,
-        setMaterialsData
-      );
+      await fetchPartModelMaterials(model, setMaterialsData);
     }
   };
 
@@ -58,10 +67,43 @@ const ScanQR = () => {
     }
   };
 
+  const handleLastPrintinputClick = () => {
+    setSelectedPrint(listLastPrintData.data[0].station8_print);
+    setShowlistLastPrint(true);
+  };
+
+  const handlePrintChange = (e) => {
+    const value = e.target.value;
+    setSelectedPrint(value);
+
+    if (value) {
+      const filtered = listLastPrintData.data.filter((model) =>
+        model.station8_print.toLowerCase().includes(value.toLowerCase())
+      );
+      setSelectedPrint(filtered);
+    } else {
+      setSelectedPrint([]);
+    }
+  };
+
+  const get_list_LastPrint = async (part_model) => {
+    console.log("part_model:", part_model);
+    const data = await fetchListLastPrintData(part_model);
+    console.log("data part_model", data);
+    setListLastPrintData(data);
+  };
+
   const handleSuggestionClick = (model) => {
     setSelectedPartModel(model.part_model);
+    console.log("model?.part_model:", model?.part_model);
+    get_list_LastPrint(model?.part_model);
     setFilteredModels([]);
     loadPartMaterials(model.part_model);
+  };
+
+  const handleLastPrintClick = (model) => {
+    setSelectedPrint(model);
+    setShowlistLastPrint(false);
   };
 
   const validatePartModel = () => {
@@ -123,7 +165,7 @@ const ScanQR = () => {
 
   const handleConfirm = async () => {
     const data = fetchedData;
-
+    console.log("data handleConfirm :", data);
     if (!data) {
       console.error("fetchedData is null or undefined inside handleConfirm");
       toast.error("Error: Fetched data is invalid. Please try again.");
@@ -136,11 +178,13 @@ const ScanQR = () => {
 
       if (!partModel || !partId) {
         console.error("partModel or partId is undefined");
-        toast.error("Error: Part model or part ID is missing. Please try again.");
+        toast.error(
+          "Error: Part model or part ID is missing. Please try again."
+        );
         return;
       }
 
-      await handlePostData(data, station);
+      await handlePostData(data, station,selectedPrint);
 
       // ปิดกล้องหลังจากยืนยันข้อมูล
       if (htmlScanner) {
@@ -168,7 +212,8 @@ const ScanQR = () => {
         decodedText,
         station,
         onScanFinished,
-        closeModal
+        closeModal,
+        selectedPrint
       );
     } catch (error) {
       console.error("Error processing scan:", error);
@@ -267,7 +312,7 @@ const ScanQR = () => {
           <input
             type="checkbox"
             checked={autoConfirm}
-            onChange={() => setAutoConfirm(prev => !prev)}
+            onChange={() => setAutoConfirm((prev) => !prev)}
             style={{ marginBottom: "20px" }}
           />
           เปิดยืนยันอัตโนมัติ
@@ -280,6 +325,15 @@ const ScanQR = () => {
             onChange={handlePartModelChange}
             className="form-input"
             placeholder="Type to search part model..."
+          />
+          ครั้งที่ :
+          <input
+            type="text"
+            value={selectedPrint}
+            onClick={handleLastPrintinputClick}
+            onChange={handlePrintChange}
+            className="form-input"
+            placeholder="ครั้งที่พิมพ์"
           />
           {filteredModels.length > 0 && (
             <ul className="suggestions-list">
@@ -294,6 +348,19 @@ const ScanQR = () => {
               ))}
             </ul>
           )}
+          {showlistLastPrint === true && (
+            <ul className="suggestions-list">
+              {listLastPrintData.data.map((model, index) => (
+                <li
+                  key={index}
+                  onClick={() => handleLastPrintClick(model.station8_print)}
+                  className="suggestion-item"
+                >
+                  {model.station8_print}
+                </li>
+              ))}
+            </ul>
+          )}
         </label>
 
         {materialsData.length > 0 && (
@@ -302,9 +369,10 @@ const ScanQR = () => {
               Materials for {selectedPartModel}:
               <span
                 onClick={() => setIsVisible(!isVisible)}
-                style={{ cursor: 'pointer', marginLeft: '10px' }}
+                style={{ cursor: "pointer", marginLeft: "10px" }}
               >
-                {isVisible ? "🔓" : "🔒"} {/* You can replace with icons if needed */}
+                {isVisible ? "🔓" : "🔒"}{" "}
+                {/* You can replace with icons if needed */}
               </span>
             </h3>
             <table>
@@ -318,18 +386,42 @@ const ScanQR = () => {
               </thead>
               <tbody>
                 {materialsData.map((material) => (
-                  <tr key={material.part_matname} >
-                    <td >{material.part_matname}</td>
-                    <td style={{ textAlign: "right", paddingRight: "10px", paddingLeft: "110px" }}>{material.scan}</td>
-                    <td style={{ textAlign: "right", paddingRight: "10px" }}>{material.count}</td>
-                    {isVisible && <td style={{ textAlign: "right" }}>{material.all_count}</td>}
+                  <tr key={material.part_matname}>
+                    <td>{material.part_matname}</td>
+                    <td
+                      style={{
+                        textAlign: "right",
+                        paddingRight: "10px",
+                        paddingLeft: "110px",
+                      }}
+                    >
+                      {material.scan}
+                    </td>
+                    <td style={{ textAlign: "right", paddingRight: "10px" }}>
+                      {material.count}
+                    </td>
+                    {isVisible && (
+                      <td style={{ textAlign: "right" }}>
+                        {material.all_count}
+                      </td>
+                    )}
                   </tr>
                 ))}
                 <tr>
-                  <td><strong>Total</strong></td>
-                  <td style={{ textAlign: "right", paddingRight: "10px" }}><strong>{totalScan}</strong></td>
-                  <td style={{ textAlign: "right", paddingRight: "10px" }}><strong>{totalCount}</strong></td>
-                  {isVisible && <td style={{ textAlign: "right" }}><strong>{totalAllCount}</strong></td>}
+                  <td>
+                    <strong>Total</strong>
+                  </td>
+                  <td style={{ textAlign: "right", paddingRight: "10px" }}>
+                    <strong>{totalScan}</strong>
+                  </td>
+                  <td style={{ textAlign: "right", paddingRight: "10px" }}>
+                    <strong>{totalCount}</strong>
+                  </td>
+                  {isVisible && (
+                    <td style={{ textAlign: "right" }}>
+                      <strong>{totalAllCount}</strong>
+                    </td>
+                  )}
                 </tr>
               </tbody>
             </table>
@@ -345,7 +437,12 @@ const ScanQR = () => {
 
         <button
           onClick={handleLogout}
-          style={{ color: "white", backgroundColor: "black", marginTop: "20px", marginLeft: "auto" }}
+          style={{
+            color: "white",
+            backgroundColor: "black",
+            marginTop: "20px",
+            marginLeft: "auto",
+          }}
         >
           Logout
         </button>
@@ -391,7 +488,7 @@ const ScanQR = () => {
       )}
 
       <Toaster position="top-right" reverseOrder={false} />
-    </div >
+    </div>
   );
 };
 

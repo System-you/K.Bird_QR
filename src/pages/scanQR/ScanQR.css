@@ -108,7 +108,7 @@ html {
   border-radius: 4px;
   background-color: white;
   position: absolute;
-  width: 100%;
+  width: 70%;
   /* Use full width of the parent input */
   z-index: 1000;
   margin-top: 5px;

@@ -6,7 +6,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://203.170.129.88:9078',
+        target: 'https://api-qr-demo.appsystemyou.com',
         changeOrigin: true,
         rewrite: (path) => {
           console.log(`Rewriting path from ${path} to ${path.replace(/^\/api/, '')}`);

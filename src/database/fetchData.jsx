@@ -3,7 +3,13 @@ import toast from "react-hot-toast";
 const API_URL = import.meta.env.VITE_REACT_APP_API_URL;
 const apiKey = import.meta.env.VITE_REACT_APP_API_KEY;
 
-export const fetchData = async (qrCode, station, onScanFinished, closeModal) => {
+export const fetchData = async (
+  qrCode,
+  station,
+  onScanFinished,
+  closeModal,
+  selectedPrint
+) => {
   try {
     if (!apiKey || !API_URL) {
       throw new Error("API configuration is missing");
@@ -13,7 +19,7 @@ export const fetchData = async (qrCode, station, onScanFinished, closeModal) => 
     }
 
     const timestamp = new Date().getTime();
-    const url = `${API_URL}/qr-code?station=${station}&qrCode=${qrCode}&t=${timestamp}`;
+    const url = `${API_URL}/qr-code?station=${station}&qrCode=${qrCode}&t=${timestamp}&selectedPrint=${selectedPrint}`;
 
     const response = await fetch(url, {
       method: "GET",
@@ -35,7 +41,6 @@ export const fetchData = async (qrCode, station, onScanFinished, closeModal) => 
     } else {
       throw new Error("Invalid data received");
     }
-
   } catch (error) {
     console.error("Error fetching data:", error);
     toast.error(`Error: ${error.message || "Please scan the QR code again"}`);
@@ -43,10 +48,13 @@ export const fetchData = async (qrCode, station, onScanFinished, closeModal) => 
   }
 };
 
-export const handlePostData = async (data, station) => {
-  
+export const handlePostData = async (data, station,selectedPrint) => {
   try {
-    const url = `${API_URL}/driver?partModel=${data.partmodel}&station=${station}&partId=${data.partId}&userId=${localStorage.getItem('username')}`;
+    const url = `${API_URL}/driver?partModel=${
+      data.partmodel
+    }&station=${station}&partId=${data.partId}&selectedPrint=${selectedPrint}&userId=${localStorage.getItem(
+      "username"
+    )}`;
 
     const response = await fetch(url, {
       method: "PATCH",
@@ -60,7 +68,10 @@ export const handlePostData = async (data, station) => {
     if (!response.ok) {
       if (!response.ok) {
         const errorResult = await response.json();
-        toast.error(errorResult.message || "เกิดข้อผิดพลาดระหว่างการสแกน QR Code สำหรับคนขับ ");
+        toast.error(
+          errorResult.message ||
+            "เกิดข้อผิดพลาดระหว่างการสแกน QR Code สำหรับคนขับ "
+        );
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
     }
@@ -90,14 +101,18 @@ export const fetchPartModel = async (setFetchedData) => {
     }
 
     const data = await response.json();
-
+    console.log("data", data);
     if (Array.isArray(data) && data.length > 0) {
-      const sortedData = data.sort((a, b) => a.part_model.localeCompare(b.part_model));
-      localStorage.setItem('partModelData', JSON.stringify(sortedData));
+      const sortedData = data.sort((a, b) =>
+        a.part_model.localeCompare(b.part_model)
+      );
+      localStorage.setItem("partModelData", JSON.stringify(sortedData));
       setFetchedData(sortedData);
     } else if (data && Array.isArray(data.data) && data.data.length > 0) {
-      const sortedData = data.data.sort((a, b) => a.part_model.localeCompare(b.part_model));
-      localStorage.setItem('partModelData', JSON.stringify(sortedData));
+      const sortedData = data.data.sort((a, b) =>
+        a.part_model.localeCompare(b.part_model)
+      );
+      localStorage.setItem("partModelData", JSON.stringify(sortedData));
       setFetchedData(sortedData);
     } else {
       throw new Error("Data format is incorrect. Expected an array.");
@@ -127,7 +142,31 @@ export const fetchPartModelMaterials = async (partModel, setMaterialsData) => {
     const data = await response.json();
 
     setMaterialsData(data.data || []);
+  } catch (error) {
+    toast.error("Failed to fetch part model materials");
+  }
+};
 
+export const fetchListLastPrintData = async (partModel) => {
+  console.log("partModel", partModel);
+  const url = `${API_URL}/list-printdata?partModel=${partModel}`;
+  try {
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        "x-api-key": apiKey,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    return data;
   } catch (error) {
     toast.error("Failed to fetch part model materials");
   }
