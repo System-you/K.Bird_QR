@@ -18,16 +18,16 @@ const Login = () => {
       // Use import.meta.env for Vite
       const apiKey = import.meta.env.VITE_REACT_APP_API_KEY;
       const apiUrl = import.meta.env.VITE_REACT_APP_API_URL;
-      
+
       if (!apiKey) {
         throw new Error("API key is missing");
       }
-      if (!username || !password ) {
+      if (!username || !password) {
         throw new Error("Please fill in all fields");
       }
-      
+
       const url = `${apiUrl}/auth/login/${username}/${password}`;
-      
+
       let response;
       try {
         response = await fetch(url, {
@@ -38,29 +38,36 @@ const Login = () => {
             "x-api-key": apiKey, // Add API key from .env
           },
         });
-      
+
         // Check if the response is JSON
         const contentType = response.headers.get("content-type");
         if (!contentType || !contentType.includes("application/json")) {
           throw new Error("Received non-JSON response");
         }
-      
+
         const data = await response.json();
-        
+
 
         if (response.status === 200) {
-          toast.success("Login Complete.");
-          
+
+
+
+          if (!data || !data.data) {
+            throw new Error("ข้อมูลผู้ใช้ไม่ถูกต้อง กรุณาตรวจสอบชื่อผู้ใช้และรหัสผ่าน");
+          }
+
+          if (!data.data.Emp_Station) {
+            throw new Error("ไม่พบสถานีของพนักงาน");
+          }
 
           setUserData(data.data);
-          setStation(station);
-          console.log( data );
-          console.log( username);
+
+          // console.log( username);
 
           // Save station and username to localStorage
-          localStorage.setItem("station", 10);
+          localStorage.setItem("station", data.data.Emp_Station);
           localStorage.setItem("username", username);
-
+          toast.success("Login Complete.");
           // Navigate to /scanQR on successful login
           navigate("/scanQR");
         } else {

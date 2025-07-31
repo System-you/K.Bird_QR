@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Html5QrcodeScanner } from "html5-qrcode";
 import Modal from "react-modal";
 import toast, { Toaster } from "react-hot-toast";
@@ -14,7 +14,7 @@ import {
 
 const ScanQR = () => {
   const [username] = useState(localStorage.getItem("username") || "");
-  const station = "10";
+  const station = localStorage.getItem("station") || "";
   const [fetchedData, setFetchedData] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [isCameraActive, setIsCameraActive] = useState(false);
@@ -22,12 +22,19 @@ const ScanQR = () => {
   const [partModels, setPartModels] = useState([]);
   const [filteredModels, setFilteredModels] = useState([]);
   const [listLastPrintData, setListLastPrintData] = useState([]);
-  console.log(listLastPrintData);
+  // console.log(listLastPrintData);
   const [showlistLastPrint, setShowlistLastPrint] = useState(false);
   const [selectedPartModel, setSelectedPartModel] = useState("");
   const [selectedPrint, setSelectedPrint] = useState("");
   const [materialsData, setMaterialsData] = useState([]);
   const [isVisible, setIsVisible] = useState(false);
+  
+  // ใช้ useRef เพื่อเก็บ reference ของ scanner
+  const htmlScannerRef = useRef(null);
+  
+  // ใช้ useRef เพื่อเก็บค่าปัจจุบันของ selectedPrint
+  const selectedPrintRef = useRef(selectedPrint);
+  
   const totalScan = materialsData.reduce(
     (acc, material) => acc + material.scan,
     0
@@ -45,7 +52,6 @@ const ScanQR = () => {
     src: ["/system-notification-199277.mp3"],
     volume: 1.0,
   });
-  let htmlScanner = null;
 
   const loadPartMaterials = async (model) => {
     if (model) {
@@ -75,27 +81,22 @@ const ScanQR = () => {
   const handlePrintChange = (e) => {
     const value = e.target.value;
     setSelectedPrint(value);
+    selectedPrintRef.current = value; // อัพเดท ref ด้วย
 
-    if (value) {
-      const filtered = listLastPrintData.data.filter((model) =>
-        model.station8_print.toLowerCase().includes(value.toLowerCase())
-      );
-      setSelectedPrint(filtered);
-    } else {
-      setSelectedPrint([]);
-    }
+    // Note: ลบการ filter ออกเพราะไม่จำเป็นต้องกรองใน handlePrintChange
+    // การกรองจะทำในการแสดงผลแทน
   };
 
   const get_list_LastPrint = async (part_model) => {
-    console.log("part_model:", part_model);
+    // console.log("part_model:", part_model);
     const data = await fetchListLastPrintData(part_model);
-    console.log("data part_model", data);
+    // console.log("data part_model", data);
     setListLastPrintData(data);
   };
 
   const handleSuggestionClick = (model) => {
     setSelectedPartModel(model.part_model);
-    console.log("model?.part_model:", model?.part_model);
+    // console.log("model?.part_model:", model?.part_model);
     get_list_LastPrint(model?.part_model);
     setFilteredModels([]);
     loadPartMaterials(model.part_model);
@@ -103,6 +104,7 @@ const ScanQR = () => {
 
   const handleLastPrintClick = (model) => {
     setSelectedPrint(model);
+    selectedPrintRef.current = model; // อัพเดท ref ด้วย
     setShowlistLastPrint(false);
   };
 
@@ -117,7 +119,7 @@ const ScanQR = () => {
   };
 
   const initializeScanner = () => {
-    htmlScanner = new Html5QrcodeScanner(
+    htmlScannerRef.current = new Html5QrcodeScanner(
       "reader",
       {
         fps: 60,
@@ -131,7 +133,7 @@ const ScanQR = () => {
       false
     );
 
-    htmlScanner.render(onScanSuccess, (errorMessage) => {
+    htmlScannerRef.current.render(onScanSuccess, (errorMessage) => {
       console.error("errorMessage: ", errorMessage);
       return;
     });
@@ -163,9 +165,9 @@ const ScanQR = () => {
     }
   };
 
-  const handleConfirm = async () => {
+  const handleConfirm = useCallback(async () => {
     const data = fetchedData;
-    console.log("data handleConfirm :", data);
+    // console.log("data handleConfirm :", data);
     if (!data) {
       console.error("fetchedData is null or undefined inside handleConfirm");
       toast.error("Error: Fetched data is invalid. Please try again.");
@@ -175,6 +177,7 @@ const ScanQR = () => {
     try {
       const partModel = selectedPartModel;
       const partId = data.partId;
+      const currentSelectedPrint = selectedPrintRef.current; // ใช้ ref เพื่อให้ได้ค่าปัจจุบัน
 
       if (!partModel || !partId) {
         console.error("partModel or partId is undefined");
@@ -184,11 +187,18 @@ const ScanQR = () => {
         return;
       }
 
-      await handlePostData(data, station,selectedPrint);
+      console.log("handleConfirm data:", {
+        partModel,
+        partId,
+        station,
+        selectedPrint: currentSelectedPrint
+      });
+
+      await handlePostData(data, station, currentSelectedPrint);
 
       // ปิดกล้องหลังจากยืนยันข้อมูล
-      if (htmlScanner) {
-        htmlScanner.clear().catch((error) => {
+      if (htmlScannerRef.current) {
+        htmlScannerRef.current.clear().catch((error) => {
           console.error("Failed to clear QR code scanner: ", error);
         });
       }
@@ -198,35 +208,15 @@ const ScanQR = () => {
     } catch (error) {
       console.error("Error posting data:", error);
     }
-  };
+  }, [fetchedData, selectedPartModel, station]); // ลบ selectedPrint ออกจาก dependency เพราะใช้ ref แล้ว
 
-  const onScanSuccess = async (decodedText) => {
-    // ปิดกล้องเพื่อแสดง Modal
-    setIsCameraActive(false);
-    htmlScanner.clear().catch((error) => {
-      console.error("Failed to clear QR code scanner: ", error);
-    });
-
-    try {
-      await fetchData(
-        decodedText,
-        station,
-        onScanFinished,
-        closeModal,
-        selectedPrint
-      );
-    } catch (error) {
-      console.error("Error processing scan:", error);
-      toast.error("Error processing scan. Please try again.");
-    }
-  };
-
-  const onScanFinished = async (resData) => {
+  const onScanFinished = useCallback(async (resData) => {
     if (resData) {
       setFetchedData(resData);
 
-      // ตรวจสอบ Part Model
-      if (resData.partmodel !== selectedPartModel) {
+      // ตรวจสอบ Part Model โดยใช้ค่าปัจจุบัน
+      const currentSelectedPartModel = selectedPartModel;
+      if (resData.partmodel !== currentSelectedPartModel) {
         toast.error("Part model ไม่ตรงกับที่เลือกไว้ โปรดแสกนใหม่", {
           duration: 5000,
         });
@@ -247,7 +237,41 @@ const ScanQR = () => {
       console.error("Error: Fetched data is null or undefined.");
       toast.error("Error: Fetched data is invalid. Please try again.");
     }
-  };
+  }, [selectedPartModel, autoConfirm, handleConfirm]);
+
+  const onScanSuccess = useCallback(async (decodedText) => {
+    // ปิดกล้องเพื่อแสดง Modal
+    setIsCameraActive(false);
+    if (htmlScannerRef.current) {
+      htmlScannerRef.current.clear().catch((error) => {
+        console.error("Failed to clear QR code scanner: ", error);
+      });
+    }
+
+    try {
+      // ดึงข้อมูลปัจจุบันจาก state และ localStorage
+      const currentDecodedText = decodedText;
+      const currentStation = localStorage.getItem("station") || "";
+      const currentSelectedPrint = selectedPrintRef.current; // ใช้ ref เพื่อให้ได้ค่าปัจจุบัน
+      
+      console.log("Updated data before fetch:", {
+        decodedText: currentDecodedText,
+        station: currentStation,
+        selectedPrint: currentSelectedPrint
+      });
+
+      await fetchData(
+        currentDecodedText,
+        currentStation,
+        onScanFinished,
+        closeModal,
+        currentSelectedPrint
+      );
+    } catch (error) {
+      console.error("Error processing scan:", error);
+      toast.error("Error processing scan. Please try again.");
+    }
+  }, [onScanFinished]); 
 
   const closeModal = () => {
     setShowModal(false);
@@ -256,6 +280,7 @@ const ScanQR = () => {
 
   const handleLogout = () => {
     localStorage.removeItem("username");
+    localStorage.removeItem("station");
     window.location.replace("/login");
   };
 
@@ -266,6 +291,11 @@ const ScanQR = () => {
 
     loadPartModels();
   }, []);
+
+  // อัพเดท selectedPrintRef เมื่อ selectedPrint เปลี่ยน
+  useEffect(() => {
+    selectedPrintRef.current = selectedPrint;
+  }, [selectedPrint]);
 
   useEffect(() => {
     if (!username) {
@@ -290,15 +320,15 @@ const ScanQR = () => {
   useEffect(() => {
     if (isCameraActive) {
       initializeScanner();
-    } else if (htmlScanner) {
-      htmlScanner.clear().catch((error) => {
+    } else if (htmlScannerRef.current) {
+      htmlScannerRef.current.clear().catch((error) => {
         console.error("Failed to clear QR code scanner: ", error);
       });
     }
 
     return () => {
-      if (htmlScanner) {
-        htmlScanner.clear().catch((error) => {
+      if (htmlScannerRef.current) {
+        htmlScannerRef.current.clear().catch((error) => {
           console.error("Failed to clear QR code scanner: ", error);
         });
       }

@@ -101,7 +101,7 @@ export const fetchPartModel = async (setFetchedData) => {
     }
 
     const data = await response.json();
-    console.log("data", data);
+    // console.log("data", data);
     if (Array.isArray(data) && data.length > 0) {
       const sortedData = data.sort((a, b) =>
         a.part_model.localeCompare(b.part_model)
@@ -148,7 +148,7 @@ export const fetchPartModelMaterials = async (partModel, setMaterialsData) => {
 };
 
 export const fetchListLastPrintData = async (partModel) => {
-  console.log("partModel", partModel);
+  // console.log("partModel", partModel);
   const url = `${API_URL}/list-printdata?partModel=${partModel}`;
   try {
     const response = await fetch(url, {
