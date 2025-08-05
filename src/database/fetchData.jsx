@@ -124,7 +124,8 @@ export const fetchPartModel = async (setFetchedData) => {
 
 export const fetchPartModelMaterials = async (partModel, setMaterialsData) => {
   const timestamp = new Date().getTime();
-  const url = `${API_URL}/driver?partModel=${partModel}&station=9&t=${timestamp}`;
+  const station = localStorage.getItem("station") || null;
+  const url = `${API_URL}/driver?partModel=${partModel}&station=${station}&t=${timestamp}`;
   try {
     const response = await fetch(url, {
       method: "GET",
